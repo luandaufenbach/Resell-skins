@@ -1,0 +1,22 @@
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: '2026-10-01',
+  devtools: { enabled: false },
+
+  css: ['@fontsource-variable/saira/wdth.css', '~/assets/css/main.css'],
+
+  app: {
+    head: {
+      htmlAttrs: { lang: 'pt-BR' },
+      meta: [{ name: 'theme-color', content: '#1d232c' }],
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    },
+  },
+
+  runtimeConfig: {
+    // Opcional. Com uma chave da Steam Web API, links /id/apelido são resolvidos
+    // pela API oficial. Sem ela, usamos o XML público do perfil.
+    // Defina no arquivo .env como NUXT_STEAM_API_KEY=...
+    steamApiKey: '',
+  },
+})

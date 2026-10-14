@@ -1,0 +1,17 @@
+{
+  "name": "api-skins",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@fontsource-variable/saira": "^5.3.0",
+    "nuxt": "^4.6.1",
+    "vue": "^3.5.43",
+    "vue-router": "^5.4.0"
+  }
+}
