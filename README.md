@@ -62,10 +62,3 @@ XML público do perfil. A chave é sua, da plataforma, nunca do revendedor.
 As cores ficam em variáveis no topo de `app/assets/css/main.css`. Para criar um tema
 para outro revendedor, basta trocar essas variáveis. A cor de cada card vem da
 raridade do próprio item.
-
-## Próximos passos
-
-1. Preço de referência (API da Skinport em reais) e preço definido pelo revendedor
-2. Login com Steam e painel do revendedor (esconder itens, preço, WhatsApp, logo)
-3. Banco de dados para salvar as lojas e sincronizar o inventário em segundo plano
-4. Assinatura mensal (Asaas ou Mercado Pago)
