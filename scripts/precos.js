@@ -5,7 +5,7 @@
 // Precisa de NUXT_STEAMAPIS_KEY e PRECOS_DB_URL (papel job_precos, só com o acesso que o job usa).
 // O log do GitHub Actions é público: nada de host, usuário ou corpo de resposta nas mensagens.
 // A loja nunca chama a SteamApis.
-import { connect, safeError } from './db.js'
+import { connect, describeTarget, safeError } from './db.js'
 
 const LISTA = 'https://api.steamapis.com/v2/steam/items/730/list'
 const PTAX =
@@ -38,7 +38,8 @@ try {
     from public.precos`
   console.log(`Preços: ${r.itens} itens, ${r.com_preco} com preço Steam (${r.estimados} estimados).`)
 } catch (error) {
-  fail(`Erro: ${safeError(error)}`)
+  const target = /^E[A-Z]+$/.test(error.code ?? '') ? ` (banco: ${describeTarget(process.env.PRECOS_DB_URL)})` : ''
+  fail(`Erro: ${safeError(error)}${target}`)
   process.exitCode = 1
 } finally {
   await sql.end({ timeout: 5 })
