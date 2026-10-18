@@ -14,11 +14,10 @@ const ARQUIVO_HOSTS = /(^|\.)(r2\.cloudflarestorage\.com|steamapis\.com)$/
 const LISTA_MAX_IDADE = 3 * 24 * 3600 * 1000
 const LOTE = 5000
 
-for (const name of ['NUXT_STEAMAPIS_KEY', 'PRECOS_DB_URL']) {
-  if (!process.env[name]) {
-    console.error(`Falta ${name} (veja o .env.example).`)
-    process.exit(1)
-  }
+const missing = ['NUXT_STEAMAPIS_KEY', 'PRECOS_DB_URL'].filter((name) => !process.env[name])
+if (missing.length) {
+  fail(`Falta ${missing.join(' e ')} (no GitHub: Settings > Secrets and variables > Actions > Repository secrets).`)
+  process.exit(1)
 }
 
 const sql = connect(process.env.PRECOS_DB_URL)
@@ -39,10 +38,17 @@ try {
     from public.precos`
   console.log(`Preços: ${r.itens} itens, ${r.com_preco} com preço Steam (${r.estimados} estimados).`)
 } catch (error) {
-  console.error('Erro:', safeError(error))
+  fail(`Erro: ${safeError(error)}`)
   process.exitCode = 1
 } finally {
   await sql.end({ timeout: 5 })
+}
+
+// No GitHub Actions a mensagem também vira uma anotação da execução, que aparece no resumo e
+// na API pública sem precisar abrir o log.
+function fail(message) {
+  console.error(message)
+  if (process.env.GITHUB_ACTIONS) console.log(`::error title=precos::${message}`)
 }
 
 // Última PTAX dos últimos 10 dias (fim de semana e feriado não têm cotação). Cotação fora de uma
