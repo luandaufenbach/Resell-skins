@@ -13,6 +13,8 @@ const PTAX =
 const ARQUIVO_HOSTS = /(^|\.)(r2\.cloudflarestorage\.com|steamapis\.com)$/
 const LISTA_MAX_IDADE = 3 * 24 * 3600 * 1000
 const LOTE = 5000
+const TENTATIVAS_BANCO = 3
+const ESPERA_BASE_MS = 2000
 
 const missing = ['NUXT_STEAMAPIS_KEY', 'PRECOS_DB_URL'].filter((name) => !process.env[name])
 if (missing.length) {
@@ -20,29 +22,32 @@ if (missing.length) {
   process.exit(1)
 }
 
-const sql = connect(process.env.PRECOS_DB_URL)
-
 try {
-  await saveExchangeRate()
-  const items = await fetchPriceList()
-  await savePrices(items)
+  await runWithDbRetry(async () => {
+    const sql = connect(process.env.PRECOS_DB_URL)
+    try {
+      await saveExchangeRate(sql)
+      const items = await fetchPriceList()
+      await savePrices(sql, items)
 
-  await sql`select interno.calibrar()`
-  await sql`select interno.recalcular_precos()`
+      await sql`select interno.calibrar()`
+      await sql`select interno.recalcular_precos()`
 
-  const [r] = await sql`
-    select
-      count(*)::int as itens,
-      count(preco_steam_brl)::int as com_preco,
-      count(*) filter (where estimado)::int as estimados
-    from public.precos`
-  console.log(`Preços: ${r.itens} itens, ${r.com_preco} com preço Steam (${r.estimados} estimados).`)
+      const [r] = await sql`
+        select
+          count(*)::int as itens,
+          count(preco_steam_brl)::int as com_preco,
+          count(*) filter (where estimado)::int as estimados
+        from public.precos`
+      console.log(`Preços: ${r.itens} itens, ${r.com_preco} com preço Steam (${r.estimados} estimados).`)
+    } finally {
+      await sql.end({ timeout: 5 })
+    }
+  })
 } catch (error) {
   const target = /^E[A-Z]+$/.test(error.code ?? '') ? ` (banco: ${describeTarget(process.env.PRECOS_DB_URL)})` : ''
   fail(`Erro: ${safeError(error)}${target}`)
   process.exitCode = 1
-} finally {
-  await sql.end({ timeout: 5 })
 }
 
 // No GitHub Actions a mensagem também vira uma anotação da execução, que aparece no resumo e
@@ -54,7 +59,7 @@ function fail(message) {
 
 // Última PTAX dos últimos 10 dias (fim de semana e feriado não têm cotação). Cotação fora de uma
 // faixa plausível é descartada. Sem cotação nova, o cálculo usa a última gravada.
-async function saveExchangeRate() {
+async function saveExchangeRate(sql) {
   try {
     const day = (d) => `'${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}-${d.getFullYear()}'`
     const url = new URL(PTAX)
@@ -101,7 +106,7 @@ async function fetchPriceList() {
   return items
 }
 
-async function savePrices(items) {
+async function savePrices(sql, items) {
   const rows = new Map()
   for (const item of items) {
     if (typeof item.marketHashName !== 'string' || !item.marketHashName) continue
@@ -128,6 +133,27 @@ async function savePrices(items) {
         ultima_venda_em = excluded.ultima_venda_em,
         atualizado_em = excluded.atualizado_em`
   }
+}
+
+async function runWithDbRetry(run) {
+  for (let tentativa = 1; tentativa <= TENTATIVAS_BANCO; tentativa++) {
+    try {
+      return await run()
+    } catch (error) {
+      if (!isDbTransientError(error) || tentativa === TENTATIVAS_BANCO) throw error
+      const proxima = tentativa + 1
+      console.warn(`Banco indisponível (${safeError(error)}). Tentando de novo (${proxima}/${TENTATIVAS_BANCO})...`)
+      await wait(ESPERA_BASE_MS * tentativa)
+    }
+  }
+}
+
+function isDbTransientError(error) {
+  return ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'EHOSTUNREACH', 'ENETUNREACH'].includes(error?.code)
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 // Número finito e maior que zero; qualquer outra coisa vira "sem valor".
