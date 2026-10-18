@@ -11,13 +11,22 @@ const storeName = computed(() => profile.value?.name ?? 'Catálogo de skins')
 const whatsapp = computed(() => normalizePhone(route.query.w))
 const problem = computed(() => (error.value ? steamErrorMessage(error.value) : null))
 
+// ---- Tema pela URL (?cor=ff5500&fundo=claro). Quando houver painel, vem da configuração da loja.
+const { options: themeOptions } = useTheme()
+const themeFromUrl = () => ({ cor: route.query.cor, fundo: route.query.fundo })
+themeOptions.value = themeFromUrl()
+watch(() => [route.query.cor, route.query.fundo], () => (themeOptions.value = themeFromUrl()))
+onBeforeUnmount(() => {
+  if (!router.currentRoute.value.path.startsWith('/loja/')) themeOptions.value = {}
+})
+
 // ---- Resumo do inventário
 const totals = computed(() => {
   let units = 0
   let tradable = 0
   for (const item of items.value) {
     units += item.quantity
-    if (item.tradable) tradable += item.quantity
+    if (isTradableNow(item)) tradable += item.quantity
   }
   return { units, tradable }
 })
@@ -30,35 +39,121 @@ const summary = computed(() => {
   return `${itens} no inventário, ${tradable} disponíveis para troca agora.`
 })
 
-// ---- Filtros (a categoria fica na URL para o revendedor poder compartilhar "só facas")
-const counts = computed(() => {
-  const map = { tudo: items.value.length }
-  for (const item of items.value) map[item.category] = (map[item.category] ?? 0) + 1
-  return map
-})
-const chips = computed(() =>
-  [{ id: 'tudo', label: 'Tudo' }, ...CATEGORIES].filter((c) => counts.value[c.id]),
-)
+// ---- Filtros. Categoria e arma ficam na URL para o revendedor poder compartilhar "só Karambits".
+const present = computed(() => new Set(items.value.map((item) => item.category)))
+const chips = computed(() => [
+  { id: 'tudo', label: 'Tudo' },
+  ...CATEGORIES.filter((c) => present.value.has(c.id)),
+])
 
 const category = computed({
   get: () => {
     const c = String(route.query.c ?? 'tudo')
-    return counts.value[c] ? c : 'tudo'
+    return present.value.has(c) ? c : 'tudo'
   },
-  set: (c) => router.replace({ query: { ...route.query, c: c === 'tudo' ? undefined : c } }),
+  set: (c) => router.replace({ query: { ...route.query, c: c === 'tudo' ? undefined : c, a: undefined } }),
 })
 
+// Segundo nível: as armas (ou os tipos, em Agentes e Outros) da categoria escolhida.
+const groups = computed(() => {
+  if (category.value === 'tudo') return []
+  const names = new Set(items.value.filter((item) => item.category === category.value).map(itemGroup))
+  return [...names].sort((a, b) => a.localeCompare(b))
+})
+const groupsLabel = computed(() => (['agentes', 'outros'].includes(category.value) ? 'Tipos' : 'Armas'))
+
+const group = computed({
+  get: () => {
+    const a = String(route.query.a ?? '')
+    return groups.value.includes(a) ? a : null
+  },
+  set: (a) => router.replace({ query: { ...route.query, a: a ?? undefined } }),
+})
+
+const wears = ref([])
+const stattrakOnly = ref(false)
 const search = ref('')
 const sort = ref('raridade')
+const filtersOpen = ref(false)
+
+const wearChips = computed(() => WEAR_SCALE.filter((w) => items.value.some((item) => item.wear === w.id)))
+const hasStattrak = computed(() => items.value.some((item) => item.stattrak))
+const activeFilters = computed(() => wears.value.length + (stattrakOnly.value ? 1 : 0))
+
+function toggleWear(id) {
+  wears.value = wears.value.includes(id) ? wears.value.filter((w) => w !== id) : [...wears.value, id]
+}
+
 const index = computed(() => new Map(items.value.map((item) => [item.id, searchText(item)])))
+const term = computed(() => normalizeText(search.value.trim()))
+
+// Cada filtro é uma regra. A contagem de um chip aplica todas as outras regras, então mostra
+// quantos itens aparecem ao tocar nele.
+const RULES = Object.entries({
+  category: (item) => category.value === 'tudo' || item.category === category.value,
+  group: (item) => !group.value || itemGroup(item) === group.value,
+  wear: (item) => !wears.value.length || wears.value.includes(item.wear),
+  stattrak: (item) => !stattrakOnly.value || item.stattrak,
+  search: (item) => !term.value || index.value.get(item.id).includes(term.value),
+})
+
+function passes(item, skip = []) {
+  return RULES.every(([name, rule]) => skip.includes(name) || rule(item))
+}
+
+const categoryCounts = computed(() => {
+  const map = { tudo: 0 }
+  for (const item of items.value) {
+    if (!passes(item, ['category', 'group'])) continue
+    map.tudo++
+    map[item.category] = (map[item.category] ?? 0) + 1
+  }
+  return map
+})
+
+const groupCounts = computed(() => {
+  const map = {}
+  for (const item of items.value) {
+    if (!passes(item, ['group'])) continue
+    const name = itemGroup(item)
+    map[name] = (map[name] ?? 0) + 1
+  }
+  return map
+})
+
+// Desgaste e StatTrak não mostram contagem, mas desligam quando não trariam nenhum item.
+const wearAvailable = computed(() => {
+  const set = new Set()
+  for (const item of items.value) if (item.wear && passes(item, ['wear'])) set.add(item.wear)
+  return set
+})
+const stattrakAvailable = computed(() => items.value.some((item) => item.stattrak && passes(item, ['stattrak'])))
+
+// O painel do celular fecha quando a pessoa rola a página, para a barra fixa não cobrir os itens.
+let openedAt = 0
+function closeOnScroll() {
+  if (Math.abs(window.scrollY - openedAt) > 48) filtersOpen.value = false
+}
+watch(filtersOpen, (open) => {
+  openedAt = window.scrollY
+  window[open ? 'addEventListener' : 'removeEventListener']('scroll', closeOnScroll, { passive: true })
+})
+onBeforeUnmount(() => window.removeEventListener('scroll', closeOnScroll))
+
+// Quem abre um link com ?c= e ?a= precisa ver o chip ativo, que pode estar fora da tela.
+const toolbar = ref(null)
+function revealActiveChips() {
+  for (const chip of toolbar.value?.querySelectorAll('.chips .chip[aria-pressed="true"]') ?? []) {
+    const row = chip.parentElement
+    const [c, r] = [chip.getBoundingClientRect(), row.getBoundingClientRect()]
+    row.scrollLeft += c.left - r.left - (r.width - c.width) / 2
+  }
+}
+onMounted(revealActiveChips)
+watch(category, () => nextTick(revealActiveChips))
 
 const filtered = computed(() => {
-  const term = normalizeText(search.value.trim())
-  let list = items.value.filter(
-    (item) =>
-      (category.value === 'tudo' || item.category === category.value) &&
-      (!term || index.value.get(item.id).includes(term)),
-  )
+  let list = items.value.filter((item) => passes(item))
 
   if (sort.value === 'desgaste') {
     const wearRank = (item) =>
@@ -74,11 +169,13 @@ const filtered = computed(() => {
 const PAGE_SIZE = 60
 const limit = ref(PAGE_SIZE)
 const visible = computed(() => filtered.value.slice(0, limit.value))
-watch([category, search, sort], () => (limit.value = PAGE_SIZE))
+watch([category, group, wears, stattrakOnly, search, sort], () => (limit.value = PAGE_SIZE))
 
 function clearFilters() {
   search.value = ''
-  category.value = 'tudo'
+  wears.value = []
+  stattrakOnly.value = false
+  router.replace({ query: { ...route.query, c: undefined, a: undefined } })
 }
 
 // ---- Item aberto (?i=assetid), assim o link de uma skin específica pode ser compartilhado
@@ -186,23 +283,9 @@ useSeoMeta({
         </div>
       </header>
 
-      <div v-if="items.length" class="toolbar">
+      <div v-if="items.length" ref="toolbar" class="toolbar">
+        <!-- A ordem no HTML segue a do computador (para o Tab); no celular o CSS reordena. -->
         <div class="wrap toolbar-inner">
-          <label class="search">
-            <AppIcon name="search" />
-            <span class="visually-hidden">Buscar</span>
-            <input v-model="search" type="search" placeholder="Buscar skin ou sticker" enterkeyhint="search" />
-          </label>
-
-          <label class="sort">
-            <span class="visually-hidden">Ordenar por</span>
-            <select v-model="sort">
-              <option value="raridade">Raridade</option>
-              <option value="desgaste">Menor float</option>
-              <option value="nome">Nome</option>
-            </select>
-          </label>
-
           <nav class="chips" aria-label="Categorias">
             <button
               v-for="chip in chips"
@@ -210,12 +293,90 @@ useSeoMeta({
               type="button"
               class="chip"
               :aria-pressed="category === chip.id"
+              :disabled="!categoryCounts[chip.id] && category !== chip.id"
               @click="category = chip.id"
             >
               {{ chip.label }}
-              <span class="chip-count">{{ counts[chip.id] }}</span>
+              <span class="chip-count">{{ categoryCounts[chip.id] ?? 0 }}</span>
             </button>
           </nav>
+
+          <label class="search">
+            <AppIcon name="search" />
+            <span class="visually-hidden">Buscar</span>
+            <input v-model="search" type="search" placeholder="Buscar skin ou sticker" enterkeyhint="search" />
+          </label>
+
+          <!-- No celular, ordem, desgaste e StatTrak ficam atrás deste botão para a barra fixa não crescer. -->
+          <button
+            class="btn filters-toggle"
+            type="button"
+            :aria-expanded="filtersOpen"
+            aria-controls="filtros"
+            @click="filtersOpen = !filtersOpen"
+          >
+            <AppIcon name="filter" />
+            Filtros
+            <span v-if="activeFilters" class="filters-count">{{ activeFilters }}</span>
+          </button>
+
+          <div id="filtros" class="extras" :class="{ 'is-open': filtersOpen }">
+            <label class="sort">
+              <span class="extras-label">Ordenar por</span>
+              <select v-model="sort">
+                <option value="raridade">Raridade</option>
+                <option value="desgaste">Menor float</option>
+                <option value="nome">Nome</option>
+              </select>
+            </label>
+
+            <div v-if="wearChips.length || hasStattrak" class="facets">
+              <span v-if="wearChips.length" id="desgaste-label" class="extras-label">Desgaste</span>
+              <div v-if="wearChips.length" class="wears" role="group" aria-labelledby="desgaste-label">
+                <button
+                  v-for="w in wearChips"
+                  :key="w.id"
+                  type="button"
+                  class="chip chip--wear"
+                  :title="w.label"
+                  :aria-pressed="wears.includes(w.id)"
+                  :disabled="!wearAvailable.has(w.id) && !wears.includes(w.id)"
+                  @click="toggleWear(w.id)"
+                >
+                  {{ w.id }}<span class="visually-hidden"> ({{ w.label }})</span>
+                </button>
+              </div>
+              <button
+                v-if="hasStattrak"
+                type="button"
+                class="chip"
+                :aria-pressed="stattrakOnly"
+                :disabled="!stattrakAvailable && !stattrakOnly"
+                @click="stattrakOnly = !stattrakOnly"
+              >
+                StatTrak™
+              </button>
+            </div>
+          </div>
+
+          <div v-if="groups.length > 1" class="chips chips--sub" role="group" :aria-label="groupsLabel">
+            <button type="button" class="chip" :aria-pressed="!group" @click="group = null">
+              {{ groupsLabel === 'Tipos' ? 'Todos' : 'Todas' }}
+              <span class="chip-count">{{ categoryCounts[category] ?? 0 }}</span>
+            </button>
+            <button
+              v-for="name in groups"
+              :key="name"
+              type="button"
+              class="chip"
+              :aria-pressed="group === name"
+              :disabled="!groupCounts[name] && group !== name"
+              @click="group = group === name ? null : name"
+            >
+              {{ name }}
+              <span class="chip-count">{{ groupCounts[name] ?? 0 }}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -356,7 +517,7 @@ useSeoMeta({
 
 .toolbar-inner {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.625rem;
   padding-block: 0.75rem;
 }
@@ -390,21 +551,95 @@ useSeoMeta({
 }
 
 .search input::placeholder {
-  color: #6f7b8e;
+  color: var(--placeholder);
 }
 
 .sort select {
   padding: 0 0.75rem;
 }
 
+.filters-toggle {
+  min-height: 42px;
+  padding-inline: 0.875rem;
+}
+
+.filters-toggle[aria-expanded='true'] {
+  border-color: var(--accent-edge);
+}
+
+.filters-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  border-radius: var(--radius-s);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Painel do botão Filtros, no celular. */
+.extras {
+  display: none;
+  grid-column: 1 / -1;
+  gap: 0.875rem;
+  padding-bottom: 0.25rem;
+}
+
+.extras.is-open {
+  display: grid;
+}
+
+.extras-label {
+  color: var(--muted);
+  font-size: var(--step--1);
+}
+
+.sort {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.facets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.75rem;
+}
+
+.wears {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.facets .extras-label {
+  flex-basis: 100%;
+}
+
+.chip--wear {
+  justify-content: center;
+  min-width: 2.75rem;
+  padding-inline: 0.5rem;
+}
+
+/* No celular as linhas de chips rolam de lado e vêm depois da busca e do painel. */
 .chips {
   grid-column: 1 / -1;
+  order: 1;
   display: flex;
   gap: 0.375rem;
-  margin-inline: calc(var(--gutter) * -1);
-  padding-inline: var(--gutter);
+  margin: -4px calc(var(--gutter) * -1);
+  padding: 4px var(--gutter);
   overflow-x: auto;
   scrollbar-width: none;
+}
+
+.chips--sub {
+  order: 2;
 }
 
 .chips::-webkit-scrollbar {
@@ -432,9 +667,9 @@ useSeoMeta({
 }
 
 .chip[aria-pressed='true'] {
-  border-color: var(--chalk);
-  background: var(--chalk);
-  color: var(--chalk-ink);
+  border-color: var(--accent-edge);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 .chip-count {
@@ -444,22 +679,38 @@ useSeoMeta({
 }
 
 .chip[aria-pressed='true'] .chip-count {
-  color: #5d6878;
+  color: var(--accent-ink-soft);
 }
 
-/* No computador: categorias à esquerda, busca e ordem à direita, tudo numa linha. */
+/* Chip que não traria nenhum item com os outros filtros ligados. */
+.chip:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.chip:disabled:hover {
+  background: transparent;
+}
+
+/*
+  No computador: categorias, busca e ordem na primeira linha; armas, desgaste e StatTrak na
+  segunda. O painel some e os itens dele entram direto na grade.
+*/
 @media (min-width: 48rem) {
   .toolbar-inner {
     grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem) auto;
     align-items: center;
-    gap: 1rem;
+    gap: 0 1rem;
   }
 
+  /* No computador os chips quebram linha em vez de rolar: todos ficam ao alcance do mouse. */
   .chips {
     grid-column: 1;
     grid-row: 1;
+    flex-wrap: wrap;
     margin: 0;
     padding: 0;
+    overflow: visible;
   }
 
   .search {
@@ -467,9 +718,46 @@ useSeoMeta({
     grid-row: 1;
   }
 
+  .filters-toggle {
+    display: none;
+  }
+
+  .extras,
+  .extras.is-open {
+    display: contents;
+  }
+
   .sort {
     grid-column: 3;
     grid-row: 1;
+  }
+
+  .sort .extras-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .chips--sub {
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: 0.625rem;
+  }
+
+  .facets {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 0.625rem;
+  }
+
+  .facets .extras-label {
+    flex-basis: auto;
+    margin-right: -0.25rem;
   }
 }
 

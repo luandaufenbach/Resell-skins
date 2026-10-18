@@ -65,7 +65,7 @@ const label = computed(() => wearLabel(props.wear))
   width: 2px;
   height: 10px;
   margin-left: -1px;
-  background: var(--chalk);
+  background: var(--accent-edge);
 }
 
 .wear-float {

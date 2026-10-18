@@ -31,6 +31,18 @@ function onBackdropClick(event) {
   if (event.target === dialog.value) close()
 }
 
+const { theme } = useTheme()
+const rarityStyle = computed(() =>
+  props.item
+    ? {
+        '--rarity': props.item.rarity.color,
+        '--rarity-text': readableColor(props.item.rarity.color, [theme.value.bg, theme.value.surface]),
+      }
+    : null,
+)
+
+const lockLabel = computed(() => (props.item ? tradeLockLabel(props.item) : null))
+
 const accessoriesTitle = computed(() => {
   const kinds = new Set(props.item?.stickers.map((s) => s.kind))
   if (kinds.has('sticker') && kinds.has('charm')) return 'Stickers e chaveiro'
@@ -47,7 +59,7 @@ const pageUrl = () => origin + route.fullPath
   <dialog
     ref="dialog"
     class="sheet"
-    :style="item ? { '--rarity': item.rarity.color } : null"
+    :style="rarityStyle"
     :aria-label="item?.marketName"
     @close="emit('close')"
     @click="onBackdropClick"
@@ -99,9 +111,7 @@ const pageUrl = () => origin + route.fullPath
           </div>
           <div>
             <dt>Troca</dt>
-            <dd :class="{ 'is-locked': !item.tradable }">
-              {{ item.tradable ? 'Disponível agora' : item.tradeLock }}
-            </dd>
+            <dd :class="{ 'is-locked': lockLabel }">{{ lockLabel ?? 'Disponível agora' }}</dd>
           </div>
         </dl>
 
@@ -138,7 +148,8 @@ const pageUrl = () => origin + route.fullPath
         </div>
       </div>
 
-      <button class="sheet-close" type="button" aria-label="Fechar" @click="close">
+      <!-- autofocus: ao abrir, o foco vai para o Fechar (no topo) e a folha não rola até os botões. -->
+      <button class="sheet-close" type="button" aria-label="Fechar" autofocus @click="close">
         <AppIcon name="close" />
       </button>
     </div>
@@ -159,7 +170,7 @@ const pageUrl = () => origin + route.fullPath
 }
 
 .sheet::backdrop {
-  background: rgb(12 15 20 / 0.72);
+  background: var(--backdrop, rgb(12 15 20 / 0.72));
 }
 
 .sheet-body {
@@ -232,7 +243,7 @@ const pageUrl = () => origin + route.fullPath
 }
 
 .star {
-  color: var(--rarity);
+  color: var(--rarity-text);
 }
 
 .stattrak {
@@ -325,7 +336,7 @@ dd {
   height: 40px;
   border: 0;
   border-radius: 50%;
-  background: rgb(22 27 34 / 0.8);
+  background: color-mix(in srgb, var(--stage) 80%, transparent);
   cursor: pointer;
 }
 

@@ -19,6 +19,11 @@ defineProps({
       <circle cx="11" cy="11" r="6.5" />
       <path d="m20 20-4.4-4.4" />
     </template>
+    <template v-else-if="name === 'filter'">
+      <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+      <circle cx="15" cy="7" r="2" />
+      <circle cx="9" cy="17" r="2" />
+    </template>
     <template v-else-if="name === 'lock'">
       <rect x="5" y="11" width="14" height="9" rx="1.5" />
       <path d="M8 11V8a4 4 0 0 1 8 0v3" />

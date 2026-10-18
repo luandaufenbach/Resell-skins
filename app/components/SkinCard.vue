@@ -9,10 +9,15 @@ const emit = defineEmits(['open'])
 
 const NuxtLink = resolveComponent('NuxtLink')
 const stickers = computed(() => props.item.stickers.slice(0, 5))
+
+// O ★ usa a cor da raridade ajustada só o necessário para ler bem no fundo do tema.
+const { theme } = useTheme()
+const rarityText = computed(() => readableColor(props.item.rarity.color, [theme.value.bg, theme.value.surface]))
+const lockLabel = computed(() => tradeLockLabel(props.item))
 </script>
 
 <template>
-  <article class="card" :style="{ '--rarity': item.rarity.color }">
+  <article class="card" :style="{ '--rarity': item.rarity.color, '--rarity-text': rarityText }">
     <div class="stage">
       <img
         v-if="item.image"
@@ -24,12 +29,8 @@ const stickers = computed(() => props.item.stickers.slice(0, 5))
         loading="lazy"
         decoding="async"
       />
-      <div v-if="item.quantity > 1 || !item.tradable" class="badges">
-        <span v-if="item.quantity > 1" class="badge">{{ item.quantity }}×</span>
-        <span v-if="!item.tradable" class="badge badge--lock" :title="item.tradeLock">
-          <AppIcon name="lock" />
-          <span class="visually-hidden">{{ item.tradeLock }}</span>
-        </span>
+      <div v-if="item.quantity > 1" class="badges">
+        <span class="badge">{{ item.quantity }}×</span>
       </div>
       <ul v-if="stickers.length" class="stickers">
         <li v-for="(sticker, i) in stickers" :key="i">
@@ -57,6 +58,10 @@ const stickers = computed(() => props.item.stickers.slice(0, 5))
       </component>
     </h3>
     <WearMeter v-if="item.wear" class="card-wear" :wear="item.wear" :float="item.float" />
+    <p v-if="lockLabel" class="lock">
+      <AppIcon name="lock" />
+      {{ lockLabel }}
+    </p>
   </article>
 </template>
 
@@ -117,19 +122,10 @@ const stickers = computed(() => props.item.stickers.slice(0, 5))
   height: 22px;
   padding: 0 6px;
   border-radius: var(--radius-s);
-  background: rgb(22 27 34 / 0.85);
+  background: color-mix(in srgb, var(--stage) 85%, transparent);
   font-size: var(--step--1);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-}
-
-.badge--lock {
-  color: var(--alert);
-}
-
-.badge--lock svg {
-  width: 14px;
-  height: 14px;
 }
 
 .stickers {
@@ -156,7 +152,7 @@ const stickers = computed(() => props.item.stickers.slice(0, 5))
 }
 
 .star {
-  color: var(--rarity);
+  color: var(--rarity-text);
 }
 
 .stattrak {
@@ -198,11 +194,26 @@ const stickers = computed(() => props.item.stickers.slice(0, 5))
 }
 
 .card:has(.hit:focus-visible) .stage {
-  outline: 2px solid var(--chalk);
+  outline: 2px solid var(--accent-edge);
   outline-offset: 2px;
 }
 
 .card-wear {
   margin-top: 0.5rem;
+}
+
+.lock {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.375rem;
+  color: var(--alert);
+  font-size: var(--step--1);
+}
+
+.lock svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup>
 const props = defineProps({ error: { type: Object, required: true } })
 const notFound = computed(() => props.error?.statusCode === 404)
+useThemeHead()
 
 useSeoMeta({ title: () => (notFound.value ? 'Página não encontrada' : 'Algo deu errado') })
 </script>

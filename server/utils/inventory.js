@@ -55,11 +55,12 @@ export function normalizeInventory(pages, steamid) {
     if (!description) continue
 
     const item = toItem(asset, description, properties.get(String(asset.assetid)), steamid)
+    if (!isListed(item)) continue
     const amount = Number(asset.amount) || 1
 
     // Caixas, chaves e itens sem desgaste iguais viram um card só com quantidade.
     if (!item.wear && item.stickers.length === 0 && !item.nameTag) {
-      const key = `${item.marketName}|${item.tradable}|${item.tradeLock ?? ''}`
+      const key = `${item.marketName}|${item.tradable}|${item.tradableAt ?? item.tradeLock ?? ''}`
       const stack = stacks.get(key)
       if (stack) {
         stack.quantity += amount
@@ -75,6 +76,15 @@ export function normalizeInventory(pages, steamid) {
   return items.sort(compareItems)
 }
 
+/**
+ * Entra no catálogo o que é trocável agora ou tem data para liberar. Não trocável e sem data é
+ * trava permanente (medalhas, moedas, troféus). Não filtramos por tipo: pins são da mesma
+ * categoria das medalhas e são trocáveis.
+ */
+export function isListed(item) {
+  return item.tradable || Boolean(item.tradableAt || item.tradeLock)
+}
+
 function toItem(asset, d, props = [], steamid) {
   const tags = Object.fromEntries((d.tags ?? []).map((t) => [t.category, t]))
   const marketName = d.market_hash_name || d.name
@@ -83,10 +93,14 @@ function toItem(asset, d, props = [], steamid) {
   const rarityKey = tags.Rarity?.internal_name?.match(/^Rarity_([A-Za-z]+)/)?.[1]
   const wear = WEAR_BY_TAG[tags.Exterior?.internal_name] ?? null
   const { weapon, skin } = splitName(marketName)
+  // Com l=brazilian, name e market_name vêm em português. Só serve para a busca.
+  const localName = d.market_name || d.name
+  const lock = d.tradable === 1 ? null : readTradeLock(d)
 
   return {
     id: String(asset.assetid),
     marketName,
+    localName: localName && localName !== marketName ? localName : null,
     weapon,
     skin,
     type: tags.Type?.localized_tag_name ?? null,
@@ -107,7 +121,8 @@ function toItem(asset, d, props = [], steamid) {
     stickers: readAccessories(d.descriptions),
     nameTag: readNameTag(d.fraudwarnings),
     tradable: d.tradable === 1,
-    tradeLock: d.tradable === 1 ? null : readTradeLock(d),
+    tradableAt: lock?.date ?? null,
+    tradeLock: lock?.text ?? null,
     inspectLink: readInspectLink(d, asset, steamid),
     steamUrl: `https://steamcommunity.com/profiles/${steamid}/inventory/#730_2_${asset.assetid}`,
     quantity: 1,
@@ -166,12 +181,44 @@ function readNameTag(warnings = []) {
   return null
 }
 
-// Texto da própria Steam, já em português (ex.: "Negociável após 19 de out. de 2026").
+// Texto da própria Steam, já em português (ex.: "Negociável após 19 de out. de 2026 (07:00:00) GMT").
+// Sem texto com data, a trava é permanente. Se o texto tem ano mas a data não for lida, o item
+// continua no catálogo com o texto da Steam: melhor mostrar travado que esconder uma faca.
 function readTradeLock(d) {
   const text = [...(d.owner_descriptions ?? []), ...(d.descriptions ?? [])]
     .map((x) => String(x?.value ?? '').replace(/<[^>]+>/g, '').trim())
-    .find((v) => /\d{4}/.test(v) && /(ap[oó]s|after|until|at[eé])/i.test(v))
-  return text ?? 'Bloqueado para troca'
+    .find(
+      (v) =>
+        /\d{4}/.test(v) &&
+        /(ap[oó]s|after|until|at[eé])/i.test(v) &&
+        /(negoci|troca|trad|vend|market|protegid|protected)/i.test(v),
+    )
+  return { text: text ?? null, date: parseSteamDate(text) ?? parseIsoDate(d.cache_expiration) }
+}
+
+const MONTHS = {
+  jan: 0, fev: 1, feb: 1, mar: 2, abr: 3, apr: 3, mai: 4, may: 4, jun: 5, jul: 6,
+  ago: 7, aug: 7, set: 8, sep: 8, out: 9, oct: 9, nov: 10, dez: 11, dec: 11,
+}
+
+// "19 de out. de 2026 (07:00:00) GMT" ou "Oct 19, 2026 (7:00:00) GMT" -> ISO em UTC.
+function parseSteamDate(text) {
+  if (!text) return null
+  const pt = text.match(/(\d{1,2}) de ([a-zç]{3})[a-zç]*\.? de (\d{4})/i)
+  const en = !pt && text.match(/\b([a-z]{3})[a-z]*\.? (\d{1,2}),? (\d{4})/i)
+  const [day, month, year] = pt ? [pt[1], pt[2], pt[3]] : en ? [en[2], en[1], en[3]] : []
+  const m = MONTHS[month?.toLowerCase()]
+  if (m == null) return null
+
+  const [, h = 0, min = 0, s = 0] = text.match(/\((\d{1,2}):(\d{2}):(\d{2})\)/) ?? []
+  const date = new Date(Date.UTC(+year, m, +day, +h, +min, +s))
+  return date.getUTCDate() === +day ? date.toISOString() : null
+}
+
+// Algumas respostas da Steam trazem a data da trava também em cache_expiration.
+function parseIsoDate(value) {
+  const time = Date.parse(value ?? '')
+  return Number.isFinite(time) ? new Date(time).toISOString() : null
 }
 
 function readInspectLink(d, asset, steamid) {

@@ -12,6 +12,11 @@ export const CATEGORIES = [
   { id: 'outros', label: 'Outros' },
 ]
 
+/** Segundo nível do filtro: a arma (nome em inglês) ou, em Agentes e Outros, o tipo do item. */
+export function itemGroup(item) {
+  return item.category === 'agentes' || item.category === 'outros' ? (item.type ?? 'Outros') : item.weapon
+}
+
 // Faixas oficiais de float de cada desgaste.
 export const WEAR_SCALE = [
   { id: 'FN', label: 'Nova de Fábrica', min: 0, max: 0.07 },
@@ -47,6 +52,23 @@ export function itemSubtitle(item) {
   return item.skin ? item.weapon : item.type
 }
 
+/** Trocável agora: sem trava, ou com a trava já vencida desde a última leitura do inventário. */
+export function isTradableNow(item) {
+  return item.tradable || (item.tradableAt != null && Date.parse(item.tradableAt) <= Date.now())
+}
+
+/** "Disponível em 19/10" para item com trava temporária; null quando já dá para trocar. */
+export function tradeLockLabel(item) {
+  if (isTradableNow(item)) return null
+  if (!item.tradableAt) return item.tradeLock ?? 'Bloqueado para troca'
+  const date = new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'America/Sao_Paulo',
+  }).format(new Date(item.tradableAt))
+  return `Disponível em ${date}`
+}
+
 /** "(48) 99999-9999" -> "5548999999999" */
 export function normalizePhone(value) {
   const digits = String(value ?? '').replace(/\D/g, '')
@@ -65,7 +87,7 @@ export function whatsappLink(phone, item, pageUrl) {
 
 export function searchText(item) {
   return normalizeText(
-    [item.marketName, item.type, item.nameTag, ...item.stickers.map((s) => s.name)]
+    [item.marketName, item.localName, item.type, item.nameTag, ...item.stickers.map((s) => s.name)]
       .filter(Boolean)
       .join(' '),
   )

@@ -36,7 +36,7 @@ const preview = computed(() =>
 useSeoMeta({
   title: 'Vitrine | Catálogo de skins de CS2 a partir do seu inventário',
   description:
-    'Cole o link do seu perfil Steam e receba uma página com foto, desgaste e stickers de cada skin para mandar nos grupos.',
+    'Cole o link do seu perfil Steam e receba uma página com foto, desgaste e stickers de cada skin, num link para mandar a quem quiser comprar.',
 })
 </script>
 
@@ -46,7 +46,7 @@ useSeoMeta({
 
     <section class="hero">
       <div class="hero-copy">
-        <h1 class="display hero-title">Seu inventário da Steam, pronto para mandar nos grupos</h1>
+        <h1 class="display hero-title">Seu inventário da Steam, pronto para vender</h1>
         <p class="lead">
           Cole o link do seu perfil e receba uma página com foto, desgaste e stickers de cada skin. Quem
           abrir o link fala direto com você no WhatsApp.

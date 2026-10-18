@@ -1,11 +1,14 @@
 // Catálogo de exemplo para demonstrar a plataforma sem depender da Steam.
 // Nomes e imagens vêm dos dados públicos de https://github.com/ByMykel/CSGO-API
-// Floats, patterns, stickers e travas de troca são fictícios.
+// Os nomes em português (localName) vêm do mercado da Steam com l=brazilian.
+// Floats, patterns, stickers e travas de troca são fictícios. A medalha, a moeda e o troféu do
+// fim da lista são travas permanentes e ficam fora do catálogo, como num inventário real.
 
 const DEMO_ITEMS = [
   {
     "id": "40000214392",
     "marketName": "★ Flip Knife | Tiger Tooth (Factory New)",
+    "localName": "Canivete (★) | Dente de Tigre (Nova de Fábrica)",
     "weapon": "Flip Knife",
     "skin": "Tiger Tooth",
     "type": "Faca",
@@ -26,7 +29,9 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": false,
-    "tradeLock": "Negociável após 19 de out. de 2026 (07:00:00) GMT",
+    "tradableAt": null,
+    "lockDays": 3,
+    "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/★%20Flip%20Knife%20%7C%20Tiger%20Tooth%20(Factory%20New)",
     "quantity": 1
@@ -34,6 +39,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000074370",
     "marketName": "★ Karambit | Doppler (Factory New)",
+    "localName": "Karambit (★) | Doppler (Nova de Fábrica)",
     "weapon": "Karambit",
     "skin": "Doppler",
     "type": "Faca",
@@ -54,6 +60,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/★%20Karambit%20%7C%20Doppler%20(Factory%20New)",
@@ -62,6 +69,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000136403",
     "marketName": "★ StatTrak™ M9 Bayonet | Marble Fade (Factory New)",
+    "localName": "Baioneta M9 (★ StatTrak™) | Mármore Desbotado (Nova de Fábrica)",
     "weapon": "M9 Bayonet",
     "skin": "Marble Fade",
     "type": "Faca",
@@ -82,6 +90,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/★%20StatTrak™%20M9%20Bayonet%20%7C%20Marble%20Fade%20(Factory%20New)",
@@ -90,6 +99,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000307890",
     "marketName": "★ Driver Gloves | King Snake (Minimal Wear)",
+    "localName": "Luvas de Motorista (★) | Rei Cobra (Pouco Usada)",
     "weapon": "Driver Gloves",
     "skin": "King Snake",
     "type": "Luvas",
@@ -110,6 +120,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/★%20Driver%20Gloves%20%7C%20King%20Snake%20(Minimal%20Wear)",
@@ -118,6 +129,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000282488",
     "marketName": "★ Sport Gloves | Vice (Field-Tested)",
+    "localName": "Luvas Esportivas (★) | Vício (Testada em Campo)",
     "weapon": "Sport Gloves",
     "skin": "Vice",
     "type": "Luvas",
@@ -138,6 +150,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/★%20Sport%20Gloves%20%7C%20Vice%20(Field-Tested)",
@@ -146,6 +159,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000379497",
     "marketName": "AK-47 | Asiimov (Field-Tested)",
+    "localName": "AK-47 | Asiimov (Testada em Campo)",
     "weapon": "AK-47",
     "skin": "Asiimov",
     "type": "Rifle",
@@ -177,6 +191,7 @@ const DEMO_ITEMS = [
     ],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Asiimov%20(Field-Tested)",
@@ -185,6 +200,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000463655",
     "marketName": "M4A1-S | Printstream (Minimal Wear)",
+    "localName": "M4A1-S | Cadeia de Caracteres (Pouco Usada)",
     "weapon": "M4A1-S",
     "skin": "Printstream",
     "type": "Rifle",
@@ -205,6 +221,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/M4A1-S%20%7C%20Printstream%20(Minimal%20Wear)",
@@ -213,6 +230,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000812832",
     "marketName": "AWP | Asiimov (Field-Tested)",
+    "localName": "AWP | Asiimov (Testada em Campo)",
     "weapon": "AWP",
     "skin": "Asiimov",
     "type": "Rifle de Precisão",
@@ -239,6 +257,7 @@ const DEMO_ITEMS = [
     ],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/AWP%20%7C%20Asiimov%20(Field-Tested)",
@@ -247,6 +266,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000876605",
     "marketName": "Desert Eagle | Printstream (Factory New)",
+    "localName": "Desert Eagle | Cadeia de Caracteres (Nova de Fábrica)",
     "weapon": "Desert Eagle",
     "skin": "Printstream",
     "type": "Pistola",
@@ -267,6 +287,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/Desert%20Eagle%20%7C%20Printstream%20(Factory%20New)",
@@ -275,6 +296,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001275618",
     "marketName": "MP9 | Starlight Protector (Minimal Wear)",
+    "localName": "MP9 | Protetor da Luz Estelar (Pouco Usada)",
     "weapon": "MP9",
     "skin": "Starlight Protector",
     "type": "Submetralhadora",
@@ -295,6 +317,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/MP9%20%7C%20Starlight%20Protector%20(Minimal%20Wear)",
@@ -303,6 +326,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001506649",
     "marketName": "Sir Bloody Miami Darryl | The Professionals",
+    "localName": "Sr. Darryl Sangrento de Miami | Os Profissionais",
     "weapon": "Sir Bloody Miami Darryl",
     "skin": "The Professionals",
     "type": "Agente",
@@ -323,14 +347,46 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/Sir%20Bloody%20Miami%20Darryl%20%7C%20The%20Professionals",
     "quantity": 1
   },
   {
+    "id": "40000510001",
+    "marketName": "Civil Protection Pin",
+    "localName": "Broche | Proteção Civil",
+    "weapon": "Civil Protection Pin",
+    "skin": null,
+    "type": "Colecionável",
+    "category": "outros",
+    "star": false,
+    "stattrak": false,
+    "souvenir": false,
+    "rarity": {
+      "label": "Extraordinário",
+      "color": "#eb4b4b",
+      "rank": 6
+    },
+    "wear": null,
+    "wearLabel": null,
+    "float": null,
+    "pattern": null,
+    "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai2l-lQ8ndwMWvJjSU6lp58YTg41vrRCLhl5jf_C5C983-POo1IqbFC2PHxe0nsbE8GC22zUx-sDvcmYn6cHPEbAd0XJZ1ReIK50XpjJS5YM2GeADW",
+    "stickers": [],
+    "nameTag": null,
+    "tradable": true,
+    "tradableAt": null,
+    "tradeLock": null,
+    "inspectLink": null,
+    "steamUrl": "https://steamcommunity.com/market/listings/730/Civil%20Protection%20Pin",
+    "quantity": 1
+  },
+  {
     "id": "40000577201",
     "marketName": "AK-47 | Phantom Disruptor (Minimal Wear)",
+    "localName": "AK-47 | Disruptor Fantasma (Pouco Usada)",
     "weapon": "AK-47",
     "skin": "Phantom Disruptor",
     "type": "Rifle",
@@ -351,6 +407,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Phantom%20Disruptor%20(Minimal%20Wear)",
@@ -359,6 +416,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000546329",
     "marketName": "StatTrak™ AK-47 | Redline (Field-Tested)",
+    "localName": "AK-47 (StatTrak™) | Linhas Vermelhas (Testada em Campo)",
     "weapon": "AK-47",
     "skin": "Redline",
     "type": "Rifle",
@@ -400,6 +458,7 @@ const DEMO_ITEMS = [
     ],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/StatTrak™%20AK-47%20%7C%20Redline%20(Field-Tested)",
@@ -408,6 +467,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000608825",
     "marketName": "Souvenir M4A1-S | Knight (Factory New)",
+    "localName": null,
     "weapon": "M4A1-S",
     "skin": "Knight",
     "type": "Rifle",
@@ -449,6 +509,7 @@ const DEMO_ITEMS = [
     ],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/Souvenir%20M4A1-S%20%7C%20Knight%20(Factory%20New)",
@@ -457,6 +518,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000572259",
     "marketName": "M4A4 | Desolate Space (Field-Tested)",
+    "localName": "M4A4 | Desolação Espacial (Testada em Campo)",
     "weapon": "M4A4",
     "skin": "Desolate Space",
     "type": "Rifle",
@@ -493,6 +555,7 @@ const DEMO_ITEMS = [
     ],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/M4A4%20%7C%20Desolate%20Space%20(Field-Tested)",
@@ -501,6 +564,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000975233",
     "marketName": "Five-SeveN | Monkey Business (Minimal Wear)",
+    "localName": "Five-SeveN | Macaquice (Pouco Usada)",
     "weapon": "Five-SeveN",
     "skin": "Monkey Business",
     "type": "Pistola",
@@ -521,6 +585,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/Five-SeveN%20%7C%20Monkey%20Business%20(Minimal%20Wear)",
@@ -529,6 +594,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000967375",
     "marketName": "StatTrak™ USP-S | Cortex (Field-Tested)",
+    "localName": "USP-S (StatTrak™) | Córtex (Testada em Campo)",
     "weapon": "USP-S",
     "skin": "Cortex",
     "type": "Pistola",
@@ -549,6 +615,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/StatTrak™%20USP-S%20%7C%20Cortex%20(Field-Tested)",
@@ -557,6 +624,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001349005",
     "marketName": "MAC-10 | Disco Tech (Field-Tested)",
+    "localName": "MAC-10 | Discoteca (Testada em Campo)",
     "weapon": "MAC-10",
     "skin": "Disco Tech",
     "type": "Submetralhadora",
@@ -577,6 +645,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/MAC-10%20%7C%20Disco%20Tech%20(Field-Tested)",
@@ -585,6 +654,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001330364",
     "marketName": "UMP-45 | Primal Saber (Field-Tested)",
+    "localName": "UMP-45 | Sabre Primitivo (Testada em Campo)",
     "weapon": "UMP-45",
     "skin": "Primal Saber",
     "type": "Submetralhadora",
@@ -605,6 +675,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/UMP-45%20%7C%20Primal%20Saber%20(Field-Tested)",
@@ -613,6 +684,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001351440",
     "marketName": "MAG-7 | Justice (Field-Tested)",
+    "localName": "MAG-7 | Justiça (Testada em Campo)",
     "weapon": "MAG-7",
     "skin": "Justice",
     "type": "Pesada",
@@ -633,6 +705,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/MAG-7%20%7C%20Justice%20(Field-Tested)",
@@ -641,6 +714,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001416248",
     "marketName": "XM1014 | Tranquility (Minimal Wear)",
+    "localName": "XM1014 | Tranquilidade (Pouco Usada)",
     "weapon": "XM1014",
     "skin": "Tranquility",
     "type": "Pesada",
@@ -661,6 +735,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/XM1014%20%7C%20Tranquility%20(Minimal%20Wear)",
@@ -669,6 +744,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000697253",
     "marketName": "AK-47 | Slate (Well-Worn)",
+    "localName": "AK-47 | Tons de Preto (Bem Desgastada)",
     "weapon": "AK-47",
     "skin": "Slate",
     "type": "Rifle",
@@ -689,6 +765,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": "Sorte grande",
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Slate%20(Well-Worn)",
@@ -697,6 +774,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000610427",
     "marketName": "Galil AR | Cerberus (Minimal Wear)",
+    "localName": "Galil AR | Cérbero (Pouco Usada)",
     "weapon": "Galil AR",
     "skin": "Cerberus",
     "type": "Rifle",
@@ -717,6 +795,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/Galil%20AR%20%7C%20Cerberus%20(Minimal%20Wear)",
@@ -725,6 +804,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000851717",
     "marketName": "AWP | Atheris (Factory New)",
+    "localName": "AWP | Atheris (Nova de Fábrica)",
     "weapon": "AWP",
     "skin": "Atheris",
     "type": "Rifle de Precisão",
@@ -745,6 +825,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/AWP%20%7C%20Atheris%20(Factory%20New)",
@@ -753,6 +834,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001069149",
     "marketName": "Glock-18 | Fade (Factory New)",
+    "localName": "Glock-18 | Degradê (Nova de Fábrica)",
     "weapon": "Glock-18",
     "skin": "Fade",
     "type": "Pistola",
@@ -773,6 +855,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/Glock-18%20%7C%20Fade%20(Factory%20New)",
@@ -781,6 +864,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000770508",
     "marketName": "AK-47 | Elite Build (Field-Tested)",
+    "localName": "AK-47 | Porte de Elite (Testada em Campo)",
     "weapon": "AK-47",
     "skin": "Elite Build",
     "type": "Rifle",
@@ -801,7 +885,9 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": false,
-    "tradeLock": "Negociável após 19 de out. de 2026 (07:00:00) GMT",
+    "tradableAt": null,
+    "lockDays": 6,
+    "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Elite%20Build%20(Field-Tested)",
     "quantity": 1
@@ -809,6 +895,7 @@ const DEMO_ITEMS = [
   {
     "id": "40000866846",
     "marketName": "SSG 08 | Abyss (Minimal Wear)",
+    "localName": "SSG 08 | Abismo (Pouco Usada)",
     "weapon": "SSG 08",
     "skin": "Abyss",
     "type": "Rifle de Precisão",
@@ -840,6 +927,7 @@ const DEMO_ITEMS = [
     ],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/SSG%2008%20%7C%20Abyss%20(Minimal%20Wear)",
@@ -848,6 +936,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001144367",
     "marketName": "Tec-9 | Isaac (Minimal Wear)",
+    "localName": "Tec-9 | Isaac (Pouco Usada)",
     "weapon": "Tec-9",
     "skin": "Isaac",
     "type": "Pistola",
@@ -868,6 +957,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/Tec-9%20%7C%20Isaac%20(Minimal%20Wear)",
@@ -876,6 +966,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001233828",
     "marketName": "P250 | Sand Dune (Field-Tested)",
+    "localName": "P250 | Duna de Areia (Testada em Campo)",
     "weapon": "P250",
     "skin": "Sand Dune",
     "type": "Pistola",
@@ -896,6 +987,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/P250%20%7C%20Sand%20Dune%20(Field-Tested)",
@@ -904,6 +996,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001580956",
     "marketName": "Kilowatt Case",
+    "localName": "Caixa Quilowatt",
     "weapon": "Kilowatt Case",
     "skin": null,
     "type": "Caixa",
@@ -924,6 +1017,7 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/Kilowatt%20Case",
@@ -932,6 +1026,7 @@ const DEMO_ITEMS = [
   {
     "id": "40001606648",
     "marketName": "Revolution Case",
+    "localName": "Caixa da Revolução",
     "weapon": "Revolution Case",
     "skin": null,
     "type": "Caixa",
@@ -952,10 +1047,101 @@ const DEMO_ITEMS = [
     "stickers": [],
     "nameTag": null,
     "tradable": true,
+    "tradableAt": null,
     "tradeLock": null,
     "inspectLink": null,
     "steamUrl": "https://steamcommunity.com/market/listings/730/Revolution%20Case",
     "quantity": 6
+  },
+  {
+    "id": "40000510002",
+    "marketName": "2016 Service Medal",
+    "localName": null,
+    "weapon": "2016 Service Medal",
+    "skin": null,
+    "type": "Colecionável",
+    "category": "outros",
+    "star": false,
+    "stattrak": false,
+    "souvenir": false,
+    "rarity": {
+      "label": "Extraordinário",
+      "color": "#eb4b4b",
+      "rank": 6
+    },
+    "wear": null,
+    "wearLabel": null,
+    "float": null,
+    "pattern": null,
+    "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai2l-lQ8ndwMWvJjSE4ERj_YTx1VTiRRz9ocSwrHRk4-SiOeprcvGRDDbJxex0teNvGyvlxhsi5W_Rz9b8d3vFbAB0DMNxTLYJsxbujJS5YOiqyFZX",
+    "stickers": [],
+    "nameTag": null,
+    "tradable": false,
+    "tradableAt": null,
+    "tradeLock": null,
+    "inspectLink": null,
+    "steamUrl": null,
+    "quantity": 1
+  },
+  {
+    "id": "40000510003",
+    "marketName": "5 Year Veteran Coin",
+    "localName": null,
+    "weapon": "5 Year Veteran Coin",
+    "skin": null,
+    "type": "Colecionável",
+    "category": "outros",
+    "star": false,
+    "stattrak": false,
+    "souvenir": false,
+    "rarity": {
+      "label": "Extraordinário",
+      "color": "#eb4b4b",
+      "rank": 6
+    },
+    "wear": null,
+    "wearLabel": null,
+    "float": null,
+    "pattern": null,
+    "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai2l-lQ8ndwMWvJjTC_FN05oT741epGR73mMHmpXEO7aT2bfE9I_KVCDTGx7gj4LE5F3iykU504TvVnN7_JWXXMFEPozcG1w",
+    "stickers": [],
+    "nameTag": null,
+    "tradable": false,
+    "tradableAt": null,
+    "tradeLock": null,
+    "inspectLink": null,
+    "steamUrl": null,
+    "quantity": 1
+  },
+  {
+    "id": "40000510004",
+    "marketName": "Bronze Cologne 2014 Pick'Em Trophy",
+    "localName": null,
+    "weapon": "Bronze Cologne 2014 Pick'Em Trophy",
+    "skin": null,
+    "type": "Colecionável",
+    "category": "outros",
+    "star": false,
+    "stattrak": false,
+    "souvenir": false,
+    "rarity": {
+      "label": "Extraordinário",
+      "color": "#eb4b4b",
+      "rank": 6
+    },
+    "wear": null,
+    "wearLabel": null,
+    "float": null,
+    "pattern": null,
+    "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai2l-lQ8ndwMWvJjSU6lp684nx1Un1RBn4nYLp8ixk7eChZr5obqSQXjGRx-9wtLJtTn6wk0V1sWTVn92tJS3EbQIhDZMkEO4I5kW7wIf5d7S1wA-u--E",
+    "stickers": [],
+    "nameTag": null,
+    "tradable": false,
+    "tradableAt": null,
+    "tradeLock": null,
+    "inspectLink": null,
+    "steamUrl": null,
+    "quantity": 1
   }
 ]
 
@@ -964,7 +1150,17 @@ export function demoStore() {
     steamid: 'demo',
     demo: true,
     profile: { name: 'Loja exemplo', avatar: null, url: null },
-    items: DEMO_ITEMS,
+    items: DEMO_ITEMS.map(withLockDate).filter(isListed),
     fetchedAt: Date.now(),
   }
+}
+
+// A trava da demo conta a partir de hoje, para a data nunca ficar no passado.
+// A Steam libera os itens às 07:00 GMT.
+function withLockDate({ lockDays, ...item }) {
+  if (!lockDays) return item
+  const date = new Date()
+  date.setUTCDate(date.getUTCDate() + lockDays)
+  date.setUTCHours(7, 0, 0, 0)
+  return { ...item, tradableAt: date.toISOString() }
 }

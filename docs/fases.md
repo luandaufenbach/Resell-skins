@@ -16,22 +16,22 @@ Toda fase só está pronta quando, além do critério dela:
 - [x] docs/fases.md com as fases, checklists e critérios de pronto.
 - [x] Agentes design-reviewer e security-reviewer em `.claude/agents/`.
 
-## Fase 1: catálogo (sem banco)
+## Fase 1: catálogo (sem banco) (concluída)
 
-- [ ] Esconder itens permanentemente não trocáveis (não trocável e sem data de liberação).
-- [ ] Mostrar "Disponível em dd/mm" nos itens com trava temporária.
-- [ ] Trocar textos específicos ("pronto para mandar nos grupos") por textos genéricos, incluindo
+- [x] Esconder itens permanentemente não trocáveis (não trocável e sem data de liberação).
+- [x] Mostrar "Disponível em dd/mm" nos itens com trava temporária.
+- [x] Trocar textos específicos ("pronto para mandar nos grupos") por textos genéricos, incluindo
       as meta tags.
-- [ ] Filtro de segundo nível por arma em todas as categorias (Facas → Karambit, Butterfly…), só
+- [x] Filtro de segundo nível por arma em todas as categorias (Facas → Karambit, Butterfly…), só
       com o que existe no inventário e com contagem. Nomes em inglês.
-- [ ] Busca também encontra o nome em português.
-- [ ] Filtros de desgaste e StatTrak.
-- [ ] Refatorar o CSS para o tema ser derivado de uma cor de destaque e de claro/escuro, sem mudar
+- [x] Busca também encontra o nome em português.
+- [x] Filtros de desgaste e StatTrak.
+- [x] Refatorar o CSS para o tema ser derivado de uma cor de destaque e de claro/escuro, sem mudar
       o visual padrão.
-- [ ] Testar outra cor pela URL da demo (ex.: `/loja/demo?cor=ff5500`).
-- [ ] Corrigir o contraste que já está abaixo de AA no tema atual: ★ na cor da raridade (4,24:1)
+- [x] Testar outra cor pela URL da demo (ex.: `/loja/demo?cor=ff5500`).
+- [x] Corrigir o contraste que já está abaixo de AA no tema atual: ★ na cor da raridade (4,24:1)
       e "StatTrak™" (4,33:1) sobre o fundo padrão.
-- [ ] Rodar o design-reviewer.
+- [x] Rodar o design-reviewer.
 
 **Pronto quando:**
 
@@ -189,4 +189,7 @@ criados e chaves no `.env`.
 
 Ideias que surgirem durante as fases e ficaram fora do escopo.
 
-- (vazio)
+- Bordas dos campos e dos chips (`--line`) abaixo de 3:1: 1,6:1 no escuro, cerca de 1,5:1 no claro.
+- Áreas de toque: busca, botão Filtros e ordenação com 42px, chips com 36px, Fechar da ficha com 40px;
+  o link do rodapé da loja tem 20px de altura (abaixo de 24px).
+- O resumo conta unidades ("50 itens no inventário") e o chip Tudo conta cards (32). Unificar.

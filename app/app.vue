@@ -1,4 +1,8 @@
+<script setup>
+const theme = useThemeHead()
+</script>
+
 <template>
-  <NuxtLoadingIndicator color="#eef2f6" :height="2" />
+  <NuxtLoadingIndicator :color="theme.accentEdge" :height="2" />
   <NuxtPage />
 </template>
