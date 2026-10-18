@@ -114,16 +114,17 @@ Antes de começar: projeto no Supabase criado e chaves no `.env`.
 
 ## Fase 4: contas e lojas
 
-Antes de começar: site publicado na Render (escolhida em 18/10/2026, veja o CLAUDE.md), Resend e
-Turnstile criados e chaves no `.env`.
+Antes de começar: site publicado na Render (no ar desde 18/10/2026 em
+https://vitrine-6ov4.onrender.com, veja o CLAUDE.md), Resend e Turnstile criados e chaves no `.env`.
 
 - [ ] Cadastro com verificação de e-mail, recuperação de senha e Turnstile.
 - [ ] Limite de tentativas no login.
 - [ ] Turnstile também na geração de prévia (`POST /api/previa`), como pede o CLAUDE.md.
-- [ ] Na Render: preencher `NUXT_PUBLIC_SITE_URL` com o endereço do site e testar o limite com um
+- [x] Na Render: preencher `NUXT_PUBLIC_SITE_URL` com o endereço do site e testar o limite com um
       `true-client-ip` falsificado (o `render.yaml` já usa esse cabeçalho, que a Cloudflare na
       frente da Render troca pelo IP real). O limite conta na memória: manter uma instância só.
-- [ ] Gerar uma prévia pelo site publicado: a Steam às vezes bloqueia IPs de datacenter.
+- [x] Gerar uma prévia pelo site publicado: a Steam às vezes bloqueia IPs de datacenter. Em 18/10
+      a prévia de um inventário de 625 itens saiu em 2,4 s pela Render.
 - [ ] Domínio próprio (.com.br) comprado e ligado à Render antes do primeiro revendedor.
 - [ ] Cache em memória sem teto: cada inventário lido fica guardado até o servidor reiniciar.
       Limitar o tamanho (driver lru-cache do unstorage) ou usar armazenamento externo, conforme a
