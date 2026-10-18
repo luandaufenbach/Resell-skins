@@ -40,6 +40,21 @@ async function generate() {
   }
 }
 
+// Ao lado do formulário, skins da loja de exemplo com os cards de verdade: quem vai colar o link
+// vê antes como cada skin aparece.
+const SAMPLE = [
+  '★ Karambit | Doppler (Factory New)',
+  'StatTrak™ AK-47 | Redline (Field-Tested)',
+  '★ Sport Gloves | Vice (Field-Tested)',
+  'AWP | Atheris (Factory New)',
+  'Desert Eagle | Printstream (Factory New)',
+  'M4A1-S | Printstream (Minimal Wear)',
+]
+const { data: demo } = await useFetch('/api/demo')
+const sample = computed(() =>
+  SAMPLE.map((name) => demo.value?.items.find((i) => i.marketName === name)).filter(Boolean),
+)
+
 useSeoMeta({
   title: 'Veja como fica a sua loja | Vitrine',
   description: 'Cole o link do seu perfil da Steam e veja a sua loja de skins na hora, sem criar conta.',
@@ -50,63 +65,75 @@ useSeoMeta({
   <main class="wrap previa">
     <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
 
-    <div class="previa-body">
-      <h1 class="display previa-title">Veja como fica a sua loja</h1>
-      <p class="lead">
-        Cole o link do seu perfil da Steam. Em alguns segundos aparecem as suas skins com foto, float,
-        stickers e preço, num link que vale 24 horas. Não precisa criar conta.
-      </p>
+    <div class="previa-layout">
+      <div class="previa-body">
+        <h1 class="display previa-title">Veja como fica a sua loja</h1>
+        <p class="lead">
+          Cole o link do seu perfil da Steam. Em segundos, suas skins aparecem com foto, float, stickers
+          e preço, num link que vale 24 horas. Sem criar conta.
+        </p>
 
-      <TrustNote />
+        <TrustNote />
 
-      <form class="generate" @submit.prevent="generate">
-        <label class="field">
-          <span class="field-label">Link do perfil Steam</span>
-          <input
-            v-model="steamUrl"
-            class="input"
-            required
-            inputmode="url"
-            autocomplete="url"
-            spellcheck="false"
-            placeholder="steamcommunity.com/id/seunome"
-            :aria-invalid="problemField === 'url' || undefined"
-            :aria-describedby="problemField === 'url' ? 'erro-previa' : undefined"
-          />
-          <span class="field-hint">Também aceita o seu link de troca.</span>
-        </label>
+        <form class="generate" @submit.prevent="generate">
+          <label class="field">
+            <span class="field-label">Link do perfil Steam</span>
+            <input
+              v-model="steamUrl"
+              class="input"
+              required
+              inputmode="url"
+              autocomplete="url"
+              spellcheck="false"
+              placeholder="steamcommunity.com/id/seunome"
+              :aria-invalid="problemField === 'url' || undefined"
+              :aria-describedby="problemField === 'url' ? 'erro-previa' : undefined"
+            />
+            <span class="field-hint">Também aceita o seu link de troca.</span>
+          </label>
 
-        <label class="field">
-          <span class="field-label">WhatsApp para pedidos <span class="field-optional">(opcional)</span></span>
-          <input
-            v-model="phone"
-            class="input"
-            type="tel"
-            inputmode="tel"
-            autocomplete="tel"
-            placeholder="(48) 99999-9999"
-            :aria-invalid="problemField === 'phone' || undefined"
-            :aria-describedby="problemField === 'phone' ? 'erro-previa' : undefined"
-          />
-          <span class="field-hint">
-            Na prévia, o botão de pedir aparece só para você. O número é apagado quando a prévia expira.
-          </span>
-        </label>
+          <label class="field">
+            <span class="field-label">WhatsApp para pedidos <span class="field-optional">(opcional)</span></span>
+            <input
+              v-model="phone"
+              class="input"
+              type="tel"
+              inputmode="tel"
+              autocomplete="tel"
+              placeholder="(48) 99999-9999"
+              :aria-invalid="problemField === 'phone' || undefined"
+              :aria-describedby="problemField === 'phone' ? 'erro-previa' : undefined"
+            />
+            <span class="field-hint">
+              Na prévia, o botão de pedir aparece só para você. O número é apagado quando a prévia expira.
+            </span>
+          </label>
 
-        <div v-if="problem" id="erro-previa" class="form-problem" role="alert">
-          <p class="form-problem-title">{{ problem.title }}</p>
-          <p>{{ problem.body }}</p>
-        </div>
+          <div v-if="problem" id="erro-previa" class="form-problem" role="alert">
+            <p class="form-problem-title">{{ problem.title }}</p>
+            <p>{{ problem.body }}</p>
+          </div>
 
-        <button class="btn btn--primary btn--large" type="submit" :disabled="pending">
-          {{ pending ? 'Lendo inventário…' : 'Ver minha loja' }}
-        </button>
-      </form>
+          <button class="btn btn--primary btn--large" type="submit" :disabled="pending">
+            {{ pending ? 'Lendo inventário…' : 'Ver minha loja' }}
+          </button>
+        </form>
 
-      <p class="privacy">
-        O inventário precisa estar público. Na Steam, abra Editar perfil, depois Configurações de
-        privacidade, e deixe Inventário como Público.
-      </p>
+        <p class="privacy">
+          O inventário precisa estar público. Na Steam, abra Editar perfil, depois Configurações de
+          privacidade, e deixe Inventário como Público.
+        </p>
+      </div>
+
+      <section v-if="sample.length" class="sample" aria-labelledby="amostra">
+        <h2 id="amostra" class="sample-title">Assim aparece cada skin na sua loja</h2>
+        <ul class="sample-grid">
+          <li v-for="item in sample" :key="item.id">
+            <SkinCard :item="item" :to="{ path: '/loja/demo', query: { i: item.id } }" />
+          </li>
+        </ul>
+        <NuxtLink to="/loja/demo" class="sample-link">Abrir a loja de exemplo</NuxtLink>
+      </section>
     </div>
   </main>
 </template>
@@ -117,16 +144,30 @@ useSeoMeta({
   padding-bottom: 3rem;
 }
 
-.previa-body {
+.previa-layout {
   display: grid;
-  gap: 1.25rem;
-  max-width: 36rem;
+  gap: 3.5rem;
   margin-top: 2.5rem;
 }
 
+.previa-body {
+  display: grid;
+  gap: 1.25rem;
+  align-content: start;
+  max-width: 36rem;
+}
+
 @media (min-width: 48rem) {
-  .previa-body {
+  .previa-layout {
     margin-top: 4rem;
+  }
+}
+
+/* No computador o formulário divide a tela com as skins de exemplo, em vez de ocupar só metade. */
+@media (min-width: 64rem) {
+  .previa-layout {
+    grid-template-columns: minmax(0, 34rem) minmax(0, 1fr);
+    gap: 4rem;
   }
 }
 
@@ -168,5 +209,56 @@ useSeoMeta({
 .privacy {
   color: var(--muted);
   font-size: var(--step--1);
+}
+
+/* ---- Skins de exemplo */
+.sample {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.sample-title {
+  color: var(--muted);
+  font-size: var(--step-0);
+  font-weight: 560;
+}
+
+.sample-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem 0.75rem;
+}
+
+/* No celular, quatro bastam: o formulário é o que importa nesta tela. */
+.sample-grid li:nth-child(n + 5) {
+  display: none;
+}
+
+.sample-link {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text);
+  text-underline-offset: 3px;
+}
+
+@media (min-width: 40rem) {
+  .sample-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem 1.25rem;
+  }
+
+  .sample-grid li:nth-child(n + 5) {
+    display: block;
+  }
+}
+
+@media (min-width: 64rem) {
+  /* Alinha o topo das skins com o título, não com o nome do produto. */
+  .sample {
+    padding-top: 0.5rem;
+  }
 }
 </style>

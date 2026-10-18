@@ -53,8 +53,9 @@ const priceNote = computed(() => {
   const price = props.item.price
   if (!price) return 'Este item não tem preço de referência na Steam.'
   const savings = savingsPercent(price)
-  const note = savings ? `Preço de exemplo: o da Steam menos ${savings}%.` : 'Preço de exemplo.'
-  return price.estimated ? `${note} O valor da Steam é estimado a partir do menor anúncio de lá.` : note
+  const note = savings ? `${savings}% abaixo do preço da Steam.` : null
+  const estimate = price.estimated ? 'O valor da Steam é estimado a partir do menor anúncio.' : null
+  return [note, estimate].filter(Boolean).join(' ') || null
 })
 
 const accessoriesTitle = computed(() => {

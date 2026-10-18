@@ -27,7 +27,6 @@ function money(value) {
   }).format(rounded)
 }
 const founderPrice = (value) => money(value * (1 - founders.value.discount))
-const founderPercent = computed(() => Math.round((founders.value.discount ?? 0) * 100))
 
 // ---- O que a loja mostra: duas skins da demo, uma com stickers e outra com trava de troca.
 const SPECIMENS = ['StatTrak™ AK-47 | Redline (Field-Tested)', '★ Flip Knife | Tiger Tooth (Factory New)']
@@ -210,13 +209,11 @@ useSeoMeta({
           <p v-else class="pricing-lead">Peça os valores pelo WhatsApp.</p>
 
           <p v-if="hasPlans && founders.seats && founders.discount" class="founders">
-            <strong>Preço de fundador.</strong>
-            Os {{ founders.seats }} primeiros assinantes pagam {{ founderPercent }}% a menos enquanto mantiverem
-            a assinatura: {{ founderPrice(plans.monthly) }} no mensal e {{ founderPrice(plans.quarterly) }} no
-            trimestral.
+            <strong>Os {{ founders.seats }} primeiros assinantes viram fundadores</strong> e pagam
+            {{ founderPrice(plans.monthly) }} por mês, ou {{ founderPrice(plans.quarterly) }} no trimestral,
+            enquanto mantiverem a assinatura.
           </p>
 
-          <p v-if="createLink" class="founders">Por enquanto, a loja é criada com a gente, pelo WhatsApp.</p>
           <div class="pricing-actions">
             <a v-if="createLink" class="btn btn--primary btn--large" :href="createLink" target="_blank" rel="noopener">
               <AppIcon name="chat" />
@@ -284,7 +281,7 @@ useSeoMeta({
       <section class="wrap block contact" aria-labelledby="duvidas">
         <h2 id="duvidas" class="display block-title">Ficou alguma dúvida?</h2>
         <div class="contact-body">
-          <p class="pricing-lead">Tire a dúvida pelo WhatsApp antes de criar a sua loja.</p>
+          <p class="pricing-lead">Fale com a gente pelo WhatsApp.</p>
           <div class="pricing-actions">
             <a v-if="askLink" class="btn btn--primary" :href="askLink" target="_blank" rel="noopener">
               <AppIcon name="chat" />

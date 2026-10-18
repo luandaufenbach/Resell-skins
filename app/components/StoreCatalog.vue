@@ -51,7 +51,7 @@ const summary = computed(() => {
 // Sem painel ainda: todo preço é o de exemplo, calculado com o desconto padrão sobre a Steam.
 const priceNote = computed(() => {
   const savings = savingsPercent(items.value.find((item) => item.price)?.price)
-  return savings ? `Preços de exemplo: ${savings}% abaixo da Steam.` : ''
+  return savings ? `Preços ${savings}% abaixo da Steam.` : ''
 })
 
 // ---- Filtros. Categoria e arma ficam na URL para o revendedor poder compartilhar "só Karambits".
@@ -408,7 +408,7 @@ if (!props.preview) useSeoMeta({
     </main>
 
     <footer class="wrap store-foot">
-      <p>Inventário lido às {{ readAt }}. Itens vendidos podem levar alguns minutos para sumir daqui.</p>
+      <p>Inventário atualizado às {{ readAt }}. Itens vendidos saem da loja em até 10 minutos.</p>
       <NuxtLink to="/">Conheça a Vitrine</NuxtLink>
     </footer>
 

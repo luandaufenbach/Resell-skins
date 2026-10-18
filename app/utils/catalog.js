@@ -136,7 +136,7 @@ export function errorMessage(error) {
     case 'PRIVATE':
       return {
         title: 'Este inventário está privado',
-        body: 'Para aparecer aqui, ele precisa estar público. Na Steam, abra Editar perfil, depois Configurações de privacidade, e deixe Inventário como Público. A mudança pode levar alguns minutos para valer.',
+        body: 'Para aparecer aqui, ele precisa estar público. Na Steam, abra Editar perfil, depois Configurações de privacidade, e deixe Inventário como Público. A mudança vale em poucos minutos.',
       }
     case 'RATE_LIMIT':
       return {
@@ -181,7 +181,7 @@ export function errorMessage(error) {
     default:
       return {
         title: 'A Steam não respondeu',
-        body: 'Pode ser instabilidade do lado deles. Tente de novo em instantes.',
+        body: 'A Steam não respondeu a tempo. Tente de novo em alguns minutos.',
       }
   }
 }

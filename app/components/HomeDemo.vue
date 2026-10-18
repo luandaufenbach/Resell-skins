@@ -92,7 +92,7 @@ const selected = ref(null)
         <span class="avatar" aria-hidden="true">{{ (store.profile?.name ?? 'L').charAt(0) }}</span>
         <div class="frame-title">
           <h2 id="demo-nome" class="display frame-name">{{ store.profile?.name ?? 'Loja exemplo' }}</h2>
-          <p v-if="savings" class="frame-note">Preços de exemplo: {{ savings }}% abaixo da Steam.</p>
+          <p v-if="savings" class="frame-note">Preços {{ savings }}% abaixo da Steam.</p>
         </div>
       </header>
       <NuxtLink class="btn btn--primary frame-open" :to="fullStore">Abrir a loja inteira</NuxtLink>

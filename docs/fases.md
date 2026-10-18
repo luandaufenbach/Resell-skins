@@ -156,7 +156,9 @@ https://vitrine-6ov4.onrender.com, veja o CLAUDE.md), Resend e Turnstile criados
 
 - [ ] Marca: nome, slug, logo, banner (recorte e ponto de foco, convertido para WebP), frase, redes
       sociais, WhatsApp, cor de destaque (sugerida a partir da logo), claro/escuro.
-- [ ] Itens: ocultar/mostrar, preço manual, custo, reservado/vendido.
+- [ ] Itens: ocultar/mostrar, preço manual, custo, reservado/vendido. O preço manual não apaga o
+      padrão (Steam menos o desconto da loja): o painel mostra os dois e tem "voltar ao padrão"
+      (pedido do dono em 18/10/2026).
 - [ ] Desconto padrão e arredondamento da loja.
 - [ ] Aviso de vencimento 5 dias antes, com a chave Pix do dono e o valor do plano do revendedor.
 - [ ] Rodar o design-reviewer e o security-reviewer.
