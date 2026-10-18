@@ -1,0 +1,27 @@
+# Hospedagem na Render. A Render lê este arquivo ao criar o serviço (Dashboard > New > Blueprint,
+# escolhendo este repositório) e a cada push no main. O repositório é público: os valores secretos
+# (sync: false) são pedidos no painel da Render na criação e nunca ficam aqui.
+services:
+  - type: web
+    name: vitrine
+    runtime: node
+    # Grátis para testar: dorme depois de 15 min sem visita. No primeiro revendedor pagante,
+    # trocar no painel para o Starter (US$ 7/mês), que não dorme.
+    plan: free
+    # Mesma região do Supabase (us-east-1), para a loja ler o banco rápido.
+    region: virginia
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: node .output/server/index.mjs
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      # A Render fica atrás da Cloudflare, que troca este cabeçalho pelo IP real do visitante
+      # (o x-forwarded-for guarda valores inventados por quem fez a requisição).
+      - key: NUXT_IP_HEADER
+        value: true-client-ip
+      - key: NUXT_SUPABASE_URL
+        sync: false
+      - key: NUXT_SUPABASE_SECRET_KEY
+        sync: false

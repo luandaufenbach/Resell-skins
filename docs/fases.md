@@ -114,16 +114,17 @@ Antes de começar: projeto no Supabase criado e chaves no `.env`.
 
 ## Fase 4: contas e lojas
 
-Antes de começar: hospedagem escolhida (com uso comercial permitido no plano), Resend e Turnstile
-criados e chaves no `.env`.
+Antes de começar: site publicado na Render (escolhida em 18/10/2026, veja o CLAUDE.md), Resend e
+Turnstile criados e chaves no `.env`.
 
 - [ ] Cadastro com verificação de e-mail, recuperação de senha e Turnstile.
 - [ ] Limite de tentativas no login.
 - [ ] Turnstile também na geração de prévia (`POST /api/previa`), como pede o CLAUDE.md.
-- [ ] Na hospedagem: preencher `NUXT_PUBLIC_SITE_URL` e `NUXT_IP_HEADER` e testar o limite com um
-      cabeçalho de IP falsificado (com dois proxies, como Cloudflare na frente da hospedagem, o
-      último valor do x-forwarded-for é o do proxy). O limite por IP conta na memória do servidor;
-      se a hospedagem rodar mais de uma instância, mover a contagem para um lugar compartilhado.
+- [ ] Na Render: preencher `NUXT_PUBLIC_SITE_URL` com o endereço do site e testar o limite com um
+      `true-client-ip` falsificado (o `render.yaml` já usa esse cabeçalho, que a Cloudflare na
+      frente da Render troca pelo IP real). O limite conta na memória: manter uma instância só.
+- [ ] Gerar uma prévia pelo site publicado: a Steam às vezes bloqueia IPs de datacenter.
+- [ ] Domínio próprio (.com.br) comprado e ligado à Render antes do primeiro revendedor.
 - [ ] Cache em memória sem teto: cada inventário lido fica guardado até o servidor reiniciar.
       Limitar o tamanho (driver lru-cache do unstorage) ou usar armazenamento externo, conforme a
       hospedagem. Com isso, decidir também se a prévia guarda uma cópia da loja por 24h em vez de

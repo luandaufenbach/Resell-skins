@@ -85,7 +85,12 @@ Nomes reservados para slug: todas as rotas acima, mais `api`, `loja`, `ajuda`, `
 - Cloudflare Turnstile no cadastro e na geração de prévia. Limite de tentativas no login.
 - Admin: lista de e-mails em variável de ambiente, checada no servidor em toda página `/admin` e
   rota `/api/admin`.
-- Hospedagem: a definir antes da fase 4. Precisa permitir uso comercial no plano usado.
+- Hospedagem: Render (decidido em 18/10/2026), serviço web Node na região virginia, a mesma do
+  Supabase (us-east-1). Configuração em `render.yaml`; cada push no main publica sozinho. Plano
+  grátis para testar (dorme depois de 15 min sem visita); Starter (US$ 7/mês) a partir do primeiro
+  revendedor pagante. O código conta com um servidor único e sempre ligado (limite por IP e cache
+  em memória). Vercel Hobby proíbe uso comercial. Domínio próprio (.com.br) comprado antes do
+  primeiro revendedor, para os links das lojas não mudarem depois.
 
 ## Steam
 

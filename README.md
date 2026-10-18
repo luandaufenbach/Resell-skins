@@ -97,14 +97,23 @@ Planos, preço de fundador e o WhatsApp do botão "Criar minha loja" ficam na ta
 `configuracao` do Supabase (chaves `planos`, `fundadores` e `whatsapp_dono`). Para mudar,
 edite a linha no Table Editor; o site lê de novo em até 5 minutos.
 
-Na hospedagem, preencha `NUXT_PUBLIC_SITE_URL` (endereço do site, para a imagem de
-compartilhamento e o link da prévia) e `NUXT_IP_HEADER` (cabeçalho com o IP do visitante,
-para o limite por IP). O limite conta na memória do servidor: com mais de uma instância,
-cada uma conta separado.
-
 Com `NUXT_STEAM_API_KEY` preenchida, links
 `/id/apelido` são resolvidos pela API oficial da Steam. Sem ela, funciona pelo
 XML público do perfil. A chave é sua, da plataforma, nunca do revendedor.
+
+## Hospedagem
+
+O site roda na Render, configurado pelo `render.yaml` (serviço web Node na região virginia, a
+mesma do Supabase). Cada push no `main` publica sozinho. Variáveis no painel da Render:
+`NUXT_SUPABASE_URL`, `NUXT_SUPABASE_SECRET_KEY` e `NUXT_PUBLIC_SITE_URL` (endereço do site, para
+a imagem de compartilhamento e o link da prévia). `NODE_VERSION` e `NUXT_IP_HEADER` (cabeçalho
+com o IP do visitante, para o limite por IP) já vêm do `render.yaml`. O limite conta na memória
+do servidor: com mais de uma instância, cada uma contaria separado. As variáveis de banco direto
+(`SUPABASE_DB_URL`, `PRECOS_DB_URL`) e a da SteamApis não vão para a Render: as migrações rodam
+na máquina do dono e o job de preços no GitHub Actions.
+
+Para testar a versão de produção na sua máquina: `npm run build` e depois
+`node --env-file=.env .output/server/index.mjs`.
 
 ## Tema
 
