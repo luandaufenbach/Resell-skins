@@ -1,12 +1,11 @@
 // GET /api/inventory/:steamid
-// Resposta: { steamid, profile: { name, avatar, url } | null, items: [...], fetchedAt }
+// Resposta: { steamid, profile: { name, avatar, url } | null, items: [...], fetchedAt, pricesOk }
+// Cada item traz `price` ({ steam, estimated, seller } ou null), lido da tabela de preços.
 // Use "demo" como steamid para ver o catálogo de exemplo sem consultar a Steam.
 export default defineEventHandler(async (event) => {
   const steamid = getRouterParam(event, 'steamid')
 
-  if (steamid === 'demo') return demoStore()
-
-  if (!isSteamId64(steamid)) {
+  if (steamid !== 'demo' && !isSteamId64(steamid)) {
     throw createError({
       statusCode: 400,
       statusMessage: 'SteamID inválido',
@@ -14,5 +13,5 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  return getStore(steamid)
+  return getPricedStore(steamid)
 })

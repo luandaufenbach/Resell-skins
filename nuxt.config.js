@@ -17,5 +17,9 @@ export default defineNuxtConfig({
     // pela API oficial. Sem ela, usamos o XML público do perfil.
     // Defina no arquivo .env como NUXT_STEAM_API_KEY=...
     steamApiKey: '',
+    // Banco (Supabase). A chave secreta ignora o RLS: só o servidor usa.
+    // NUXT_SUPABASE_URL e NUXT_SUPABASE_SECRET_KEY no .env.
+    supabaseUrl: '',
+    supabaseSecretKey: '',
   },
 })

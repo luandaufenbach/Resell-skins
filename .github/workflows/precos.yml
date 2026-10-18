@@ -1,0 +1,32 @@
+# Job diário de preços (scripts/precos.js): câmbio PTAX + lista de preços da SteamApis,
+# gravados no Supabase. Roda aqui porque a hospedagem só é escolhida antes da fase 4.
+# Secrets do repositório: NUXT_STEAMAPIS_KEY e PRECOS_DB_URL (papel job_precos, acesso limitado).
+# O repositório é público: o log também é, e o script não imprime host, usuário nem respostas.
+name: precos
+
+on:
+  schedule:
+    - cron: '30 9 * * *' # todo dia às 06:30 de Brasília; a SteamApis gera a lista de madrugada
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  precos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Actions fixadas pelo commit (v4.4.0), não pela tag, que pode ser movida.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run precos
+        env:
+          NUXT_STEAMAPIS_KEY: ${{ secrets.NUXT_STEAMAPIS_KEY }}
+          PRECOS_DB_URL: ${{ secrets.PRECOS_DB_URL }}

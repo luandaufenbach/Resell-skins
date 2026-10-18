@@ -1145,6 +1145,7 @@ const DEMO_ITEMS = [
   }
 ]
 
+// Os preços da demo são os reais, da tabela de preços (veja getPricedStore).
 export function demoStore() {
   return {
     steamid: 'demo',

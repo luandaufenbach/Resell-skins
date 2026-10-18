@@ -52,6 +52,19 @@ export function itemSubtitle(item) {
   return item.skin ? item.weapon : item.type
 }
 
+const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
+/** 1234.5 -> "R$ 1.234,50" */
+export function formatBRL(value) {
+  return brl.format(value)
+}
+
+/** % de economia do preço do revendedor sobre o preço Steam; null quando não há economia. */
+export function savingsPercent(price) {
+  if (!price?.steam || price.seller >= price.steam) return null
+  return Math.round((1 - price.seller / price.steam) * 100)
+}
+
 /** Trocável agora: sem trava, ou com a trava já vencida desde a última leitura do inventário. */
 export function isTradableNow(item) {
   return item.tradable || (item.tradableAt != null && Date.parse(item.tradableAt) <= Date.now())

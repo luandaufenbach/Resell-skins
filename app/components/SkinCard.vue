@@ -62,6 +62,8 @@ const lockLabel = computed(() => tradeLockLabel(props.item))
       <AppIcon name="lock" />
       {{ lockLabel }}
     </p>
+    <!-- No pé do card: o preço fica na mesma altura em toda a linha, com ou sem desgaste e trava. -->
+    <ItemPrice v-if="'price' in item" class="card-price" :price="item.price" />
   </article>
 </template>
 
@@ -70,6 +72,7 @@ const lockLabel = computed(() => tradeLockLabel(props.item))
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-width: 0;
 }
 
@@ -200,6 +203,11 @@ const lockLabel = computed(() => tradeLockLabel(props.item))
 
 .card-wear {
   margin-top: 0.5rem;
+}
+
+.card-price {
+  margin-top: auto;
+  padding-top: 0.5rem;
 }
 
 .lock {

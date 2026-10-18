@@ -32,6 +32,7 @@ const { data: demo } = await useFetch('/api/inventory/demo')
 const preview = computed(() =>
   SHOWCASE.map((name) => demo.value?.items.find((i) => i.marketName === name)).filter(Boolean),
 )
+const savings = computed(() => savingsPercent(preview.value.find((i) => i.price)?.price))
 
 useSeoMeta({
   title: 'Vitrine | Catálogo de skins de CS2 a partir do seu inventário',
@@ -102,6 +103,7 @@ useSeoMeta({
           </li>
         </ul>
         <figcaption>
+          <span v-if="savings">Preços de exemplo: {{ savings }}% abaixo da Steam.</span>
           <NuxtLink to="/loja/demo">Abrir o catálogo de exemplo</NuxtLink>
         </figcaption>
       </figure>
@@ -185,8 +187,17 @@ useSeoMeta({
   gap: 1.5rem 0.75rem;
 }
 
+.showcase figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  color: var(--muted);
+  font-size: var(--step--1);
+}
+
 .showcase figcaption a {
   color: var(--muted);
+  font-size: var(--step-0);
   text-underline-offset: 3px;
 }
 

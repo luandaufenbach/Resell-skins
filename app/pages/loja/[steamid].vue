@@ -39,6 +39,12 @@ const summary = computed(() => {
   return `${itens} no inventário, ${tradable} disponíveis para troca agora.`
 })
 
+// Sem painel ainda: todo preço é o de exemplo, calculado com o desconto padrão sobre a Steam.
+const priceNote = computed(() => {
+  const savings = savingsPercent(items.value.find((item) => item.price)?.price)
+  return savings ? `Preços de exemplo: ${savings}% abaixo da Steam.` : ''
+})
+
 // ---- Filtros. Categoria e arma ficam na URL para o revendedor poder compartilhar "só Karambits".
 const present = computed(() => new Set(items.value.map((item) => item.category)))
 const chips = computed(() => [
@@ -263,7 +269,10 @@ useSeoMeta({
         </div>
 
         <h1 class="display store-name">{{ storeName }}</h1>
-        <p class="store-summary">{{ summary }}</p>
+        <p class="store-summary">
+          {{ summary }}
+          <template v-if="priceNote">{{ priceNote }}</template>
+        </p>
 
         <div class="store-actions">
           <a

@@ -99,17 +99,22 @@ Nomes reservados para slug: todas as rotas acima, mais `api`, `loja`, `ajuda`, `
 
 ## Preços
 
-- Tabela com o preço de todos os itens, vinda de uma API gratuita, atualizada periodicamente e
-  salva no banco. Nunca consultar preço item a item durante uma visita.
-- O preço exibido como "Steam" vem de duas formas:
-  - Itens caros (acima de um valor configurável, ex.: R$ 500): preço real da Steam, buscado em
-    segundo plano uma vez por dia, devagar para respeitar o limite de consultas.
-  - Demais itens: preço da API × fator de calibração. O fator é a mediana de
-    (preço real na Steam ÷ preço da API) numa amostra de itens com os dois preços, calculado por
-    faixa de preço (ex.: até R$ 10, R$ 10–100, R$ 100–1.000, acima de R$ 1.000) e separado para
-    facas e luvas. Recalculado periodicamente, guardando o histórico.
-- Valor estimado aparece com "≈" na frente; valor real da Steam aparece sem.
-- Itens acima do teto de preço do mercado da Steam não mostram preço Steam.
+- Fonte: lista de preços do mercado da Steam da SteamApis (plano grátis, uma consulta por dia),
+  salva no banco. Escolhida porque os termos permitem integrar os dados em aplicações; é proibido
+  redistribuir os dados brutos ou dar acesso direto a eles. As APIs gratuitas pesquisadas proíbem
+  uso comercial ou não têm licença.
+- Nunca consultar preço durante uma visita, nem consultar a Steam a partir do servidor (IPs de
+  datacenter levam bloqueio).
+- O preço exibido como "Steam" é a mediana das vendas recentes no mercado da Steam, convertida para
+  BRL pela PTAX do Banco Central quando vier em outra moeda.
+- Item sem mediana de vendas na lista (a janela de vendas do plano grátis é curta): estimativa =
+  menor anúncio × fator, nunca acima da última venda; sem nenhuma venda registrada, fica sem preço.
+  O fator é a mediana de (mediana de vendas ÷ menor anúncio) nos itens que têm os dois, por faixa
+  de preço (até R$ 10, R$ 10–100, R$ 100–1.000, acima de R$ 1.000) e separado para facas e luvas.
+  Recalculado a cada atualização, guardando o histórico.
+- Valor estimado aparece com "≈" na frente; mediana de vendas aparece sem. O texto da estimativa
+  descreve o método ("estimado a partir do menor anúncio"), nunca afirma que não houve venda.
+- Itens acima do teto de preço do mercado da Steam (cerca de US$ 1.800) não mostram preço Steam.
 - Preço do revendedor = preço Steam menos o desconto padrão da loja (30% por padrão), com
   arredondamento configurável. Pode ser trocado por item; opção "sob consulta".
 - Exibir o preço Steam riscado, o preço do revendedor e a % de economia. Esconder o riscado quando

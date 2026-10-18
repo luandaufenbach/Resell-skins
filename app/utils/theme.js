@@ -73,6 +73,8 @@ function createTheme(mode, accent) {
   t.alert = readableColor(t.alert, grounds)
   // Foco, borda do chip ativo e marcador do float: 3:1 contra o que estiver em volta.
   t.accentEdge = readableColor(t.accent, grounds, 3)
+  // Texto na cor de destaque (ex.: o "−30%" do preço): 4,5:1.
+  t.accentText = readableColor(t.accent, grounds)
   return t
 }
 

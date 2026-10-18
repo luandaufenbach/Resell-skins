@@ -43,6 +43,16 @@ const rarityStyle = computed(() =>
 
 const lockLabel = computed(() => (props.item ? tradeLockLabel(props.item) : null))
 
+// Enquanto não há painel, o preço do revendedor é sempre o de exemplo (Steam menos o desconto padrão).
+const priceNote = computed(() => {
+  if (!props.item) return null
+  const price = props.item.price
+  if (!price) return 'Este item não tem preço de referência na Steam.'
+  const savings = savingsPercent(price)
+  const note = savings ? `Preço de exemplo: o da Steam menos ${savings}%.` : 'Preço de exemplo.'
+  return price.estimated ? `${note} O valor da Steam é estimado a partir do menor anúncio de lá.` : note
+})
+
 const accessoriesTitle = computed(() => {
   const kinds = new Set(props.item?.stickers.map((s) => s.kind))
   if (kinds.has('sticker') && kinds.has('charm')) return 'Stickers e chaveiro'
@@ -85,6 +95,11 @@ const pageUrl = () => origin + route.fullPath
           <span>{{ itemSubtitle(item) }}</span>
         </p>
         <h2 class="sheet-title display">{{ itemTitle(item) }}</h2>
+
+        <div v-if="'price' in item" class="sheet-price">
+          <ItemPrice :price="item.price" large />
+          <p v-if="priceNote" class="price-note">{{ priceNote }}</p>
+        </div>
 
         <WearMeter v-if="item.wear" class="sheet-wear" :wear="item.wear" :float="item.float" large />
 
@@ -256,6 +271,16 @@ const pageUrl = () => origin + route.fullPath
 
 .sheet-title {
   font-size: clamp(2.25rem, 8vw, 3.25rem);
+}
+
+.sheet-price {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.price-note {
+  color: var(--muted);
+  font-size: var(--step--1);
 }
 
 .facts {

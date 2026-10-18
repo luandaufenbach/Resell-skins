@@ -44,31 +44,29 @@ Toda fase só está pronta quando, além do critério dela:
 - Prints do tema padrão antes e depois da refatoração são iguais em 375px e 1280px.
 - `?cor=` muda o tema da demo e o contraste continua AA em escuro, claro e numa cor berrante.
 
-## Fase 2: preços
+## Fase 2: preços (concluída)
 
 Antes de começar: projeto no Supabase criado e chaves no `.env`.
 
-- [ ] Agente de pesquisa compara APIs gratuitas de preço: cobertura de itens, moeda (de
+- [x] Agente de pesquisa compara APIs gratuitas de preço: cobertura de itens, moeda (de
       preferência BRL), frequência de atualização, limites e termos de uso.
-- [ ] Apresentar a comparação ao dono e esperar a escolha.
-- [ ] Tabela de preços no Supabase e agendamento da atualização (definir onde o agendamento roda,
-      já que a hospedagem só é escolhida antes da fase 4).
-- [ ] Calibração: coletar devagar o preço real da Steam de uma amostra de itens populares de todas
-      as faixas, com facas e luvas separadas.
-- [ ] Calcular o fator por faixa e mostrar ao dono o fator e o erro médio de cada faixa antes de
-      ativar. Guardar o histórico.
-- [ ] Busca em segundo plano do preço real da Steam para os itens caros que aparecem em lojas e
-      prévias, uma vez por dia, respeitando o limite de consultas.
-- [ ] Enquanto não houver o preço real, usar a estimativa com "≈".
-- [ ] Itens acima do teto do mercado da Steam ficam sem preço Steam.
-- [ ] Cards e ficha do item: preço Steam riscado, preço do revendedor e economia.
-- [ ] Na prévia: preço do revendedor = preço Steam menos 30%, com a indicação "preço de exemplo".
+- [x] Apresentar a comparação ao dono e esperar a escolha (SteamApis, aprovada em 17/10/2026).
+- [x] Tabela de preços no Supabase e agendamento da atualização diária (definir onde o
+      agendamento roda, já que a hospedagem só é escolhida antes da fase 4). GitHub Actions, 06:30.
+- [x] Conversão para BRL pela PTAX quando a lista vier em outra moeda.
+- [x] Calibração para itens sem mediana de vendas na lista: fator por faixa, com facas e luvas separadas.
+      Mostrar ao dono o fator e o erro médio de cada faixa antes de ativar. Guardar o histórico.
+      Fatores aprovados pelo dono em 18/10/2026.
+- [x] Itens acima do teto do mercado da Steam ficam sem preço Steam.
+- [x] Cards e ficha do item: preço Steam riscado, preço do revendedor e economia; estimativa com "≈".
+- [x] Na prévia: preço do revendedor = preço Steam menos 30%, com a indicação "preço de exemplo".
+- [x] Rodar o design-reviewer e o security-reviewer.
 
 **Pronto quando:**
 
 - A escolha da API e os fatores de calibração foram aprovados pelo dono.
 - Abrir uma loja ou prévia não faz nenhuma consulta de preço externa.
-- Item caro com preço real aparece sem "≈"; item estimado aparece com "≈".
+- Item com venda recente aparece sem "≈"; item estimado aparece com "≈".
 - O riscado some quando o preço do revendedor é maior ou igual ao preço Steam e quando não há
   preço Steam.
 - A tabela de preços se atualiza sozinha no agendamento definido.
@@ -96,6 +94,8 @@ Antes de começar: projeto no Supabase criado e chaves no `.env`.
 - [ ] Prévia em `/previa/<id>`: expira em 24h, fica fora do Google e tem uma faixa fixa
       "Prévia · Criar minha loja".
 - [ ] Remover a rota pública `/loja/<steamid>`.
+- [ ] Limite de consultas por IP nas rotas que leem inventário e preço (a rota pública devolve preços
+      de qualquer inventário; apontado na revisão de segurança da fase 2).
 - [ ] Até existir cadastro (fase 4), o botão "Criar minha loja" abre o WhatsApp do dono com uma
       mensagem pronta.
 - [ ] Rodar o design-reviewer.
@@ -193,3 +193,7 @@ Ideias que surgirem durante as fases e ficaram fora do escopo.
 - Áreas de toque: busca, botão Filtros e ordenação com 42px, chips com 36px, Fechar da ficha com 40px;
   o link do rodapé da loja tem 20px de altura (abaixo de 24px).
 - O resumo conta unidades ("50 itens no inventário") e o chip Tudo conta cards (32). Unificar.
+- Fases Doppler gema (Ruby, Sapphire, Black Pearl, Emerald) valem várias vezes o preço Steam, que
+  é o mesmo para todas as fases: esconder o riscado nelas.
+- Página de ajuda: citar a fonte do câmbio (PTAX/Banco Central do Brasil, licença ODbL).
+- Ordenar a loja por preço (menor e maior).
