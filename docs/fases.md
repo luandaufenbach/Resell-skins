@@ -73,7 +73,7 @@ Antes de começar: projeto no Supabase criado e chaves no `.env`.
 
 ## Fase 3: página inicial e prévia
 
-- [ ] Página inicial em `/`, para o revendedor que recebeu o link. Seções sugeridas (adaptar, não
+- [x] Página inicial em `/`, para o revendedor que recebeu o link. Seções sugeridas (adaptar, não
       seguir como modelo pronto):
   1. Abertura: o que é em uma frase, botão "Ver como fica minha loja" (vai para `/previa`) e a
      loja de demonstração funcionando de verdade, com componentes reais, não um print. Se couber,
@@ -87,18 +87,21 @@ Antes de começar: projeto no Supabase criado e chaves no `.env`.
   6. Perguntas frequentes: preciso entrar com a Steam? meu inventário precisa ser público? como
      pago? posso cancelar? o que acontece se eu parar de pagar?
   7. Contato pelo WhatsApp do dono e rodapé com o aviso de não afiliação à Valve.
-- [ ] Só anunciar o que já existe. Nada de depoimentos até haver clientes reais.
-- [ ] Imagem e título de compartilhamento (Open Graph) bem feitos: é a primeira coisa que o
+- [x] Só anunciar o que já existe. Nada de depoimentos até haver clientes reais.
+- [x] Imagem e título de compartilhamento (Open Graph) bem feitos: é a primeira coisa que o
       revendedor vê quando recebe o link no WhatsApp.
-- [ ] Mover o formulário atual da `/` para `/previa`.
-- [ ] Prévia em `/previa/<id>`: expira em 24h, fica fora do Google e tem uma faixa fixa
+- [x] Mover o formulário atual da `/` para `/previa`.
+- [x] Prévia em `/previa/<id>`: expira em 24h, fica fora do Google e tem uma faixa fixa
       "Prévia · Criar minha loja".
-- [ ] Remover a rota pública `/loja/<steamid>`.
-- [ ] Limite de consultas por IP nas rotas que leem inventário e preço (a rota pública devolve preços
-      de qualquer inventário; apontado na revisão de segurança da fase 2).
-- [ ] Até existir cadastro (fase 4), o botão "Criar minha loja" abre o WhatsApp do dono com uma
+- [x] Remover a rota pública `/loja/<steamid>`.
+- [x] Limite de consultas por IP nas rotas que leem inventário e preço (a rota pública devolve preços
+      de qualquer inventário; apontado na revisão de segurança da fase 2). Criar prévia: 10 por hora;
+      abrir prévia ou demo: 60 por minuto. A rota que lia qualquer inventário foi removida.
+- [x] Até existir cadastro (fase 4), o botão "Criar minha loja" abre o WhatsApp do dono com uma
       mensagem pronta.
-- [ ] Rodar o design-reviewer.
+- [x] Rodar o design-reviewer. Rodou também o security-reviewer, porque a fase criou a tabela de
+      prévias com WhatsApp e mexeu nas rotas públicas. Os achados foram corrigidos; o que depende
+      da hospedagem ficou na fase 4.
 
 **Pronto quando:**
 
@@ -116,6 +119,16 @@ criados e chaves no `.env`.
 
 - [ ] Cadastro com verificação de e-mail, recuperação de senha e Turnstile.
 - [ ] Limite de tentativas no login.
+- [ ] Turnstile também na geração de prévia (`POST /api/previa`), como pede o CLAUDE.md.
+- [ ] Na hospedagem: preencher `NUXT_PUBLIC_SITE_URL` e `NUXT_IP_HEADER` e testar o limite com um
+      cabeçalho de IP falsificado (com dois proxies, como Cloudflare na frente da hospedagem, o
+      último valor do x-forwarded-for é o do proxy). O limite por IP conta na memória do servidor;
+      se a hospedagem rodar mais de uma instância, mover a contagem para um lugar compartilhado.
+- [ ] Cache em memória sem teto: cada inventário lido fica guardado até o servidor reiniciar.
+      Limitar o tamanho (driver lru-cache do unstorage) ou usar armazenamento externo, conforme a
+      hospedagem. Com isso, decidir também se a prévia guarda uma cópia da loja por 24h em vez de
+      reler a Steam a cada 10 minutos.
+- [ ] Com o site no ar, colar o link de `/` no WhatsApp e conferir imagem e título (fase 3).
 - [ ] Tabelas com RLS: lojas, itens, sincronizações, movimentações do inventário, eventos,
       pagamentos.
 - [ ] Verificação de posse pelo código no perfil Steam; verificação manual pelo admin.
@@ -189,7 +202,8 @@ criados e chaves no `.env`.
 
 Ideias que surgirem durante as fases e ficaram fora do escopo.
 
-- Bordas dos campos e dos chips (`--line`) abaixo de 3:1: 1,6:1 no escuro, cerca de 1,5:1 no claro.
+- Bordas dos chips (`--line`) abaixo de 3:1: 1,6:1 no escuro, cerca de 1,5:1 no claro. As dos campos
+  de texto foram corrigidas na fase 3 (`--field-line`).
 - Áreas de toque: busca, botão Filtros e ordenação com 42px, chips com 36px, Fechar da ficha com 40px;
   o link do rodapé da loja tem 20px de altura (abaixo de 24px).
 - O resumo conta unidades ("50 itens no inventário") e o chip Tudo conta cards (32). Unificar.
@@ -197,3 +211,7 @@ Ideias que surgirem durante as fases e ficaram fora do escopo.
   é o mesmo para todas as fases: esconder o riscado nelas.
 - Página de ajuda: citar a fonte do câmbio (PTAX/Banco Central do Brasil, licença ODbL).
 - Ordenar a loja por preço (menor e maior).
+- Fonte: no primeiro carregamento o título aparece numa fonte de reserva larga antes da Saira.
+  Pré-carregar o arquivo da fonte.
+- Campo com erro no formulário da prévia: com o foco, a borda volta para a cor de foco e perde o
+  vermelho do erro.

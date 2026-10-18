@@ -1,23 +1,32 @@
 <script setup>
+// Loja inteira (cabeçalho, filtros, grade e ficha do item), usada na demo e na prévia.
+// `store` é a resposta de /api/demo ou /api/previa/:id.
+const props = defineProps({
+  store: { type: Object, required: true },
+  whatsapp: { type: String, default: '' },
+  // Prévia: sem botões de copiar link e sem título e imagem de compartilhamento da loja. Ela não
+  // é uma loja verificada e não deve circular como se fosse.
+  preview: { type: Boolean, default: false },
+})
+
+// Na loja de exemplo o botão de WhatsApp abre a escolha de contato, com a mensagem pronta.
+const showWhatsapp = computed(() => Boolean(props.whatsapp || props.store.demo))
+
 const route = useRoute()
 const router = useRouter()
-const steamid = computed(() => String(route.params.steamid))
 
-const { data, error, refresh, status } = await useFetch(() => `/api/inventory/${steamid.value}`)
-
-const items = computed(() => data.value?.items ?? [])
-const profile = computed(() => data.value?.profile ?? null)
+const items = computed(() => props.store.items ?? [])
+const profile = computed(() => props.store.profile ?? null)
 const storeName = computed(() => profile.value?.name ?? 'Catálogo de skins')
-const whatsapp = computed(() => normalizePhone(route.query.w))
-const problem = computed(() => (error.value ? steamErrorMessage(error.value) : null))
 
 // ---- Tema pela URL (?cor=ff5500&fundo=claro). Quando houver painel, vem da configuração da loja.
 const { options: themeOptions } = useTheme()
 const themeFromUrl = () => ({ cor: route.query.cor, fundo: route.query.fundo })
 themeOptions.value = themeFromUrl()
 watch(() => [route.query.cor, route.query.fundo], () => (themeOptions.value = themeFromUrl()))
+// A página seguinte monta antes de esta sair: só volta ao padrão se ela não for outra loja.
 onBeforeUnmount(() => {
-  if (!router.currentRoute.value.path.startsWith('/loja/')) themeOptions.value = {}
+  if (!isStorePath(router.currentRoute.value.path)) themeOptions.value = {}
 })
 
 // ---- Resumo do inventário
@@ -212,12 +221,12 @@ function copyStoreLink() {
 }
 
 const readAt = computed(() =>
-  data.value?.fetchedAt
+  props.store.fetchedAt
     ? new Intl.DateTimeFormat('pt-BR', {
         hour: '2-digit',
         minute: '2-digit',
         timeZone: 'America/Sao_Paulo',
-      }).format(data.value.fetchedAt)
+      }).format(props.store.fetchedAt)
     : '',
 )
 
@@ -227,13 +236,8 @@ const shareImage = computed(() => {
   return item ? steamImage(item.image, '512fx384f') : undefined
 })
 
-useSeoMeta({
-  title: () =>
-    selected.value
-      ? `${selected.value.marketName} | ${storeName.value}`
-      : data.value
-        ? `Skins de ${storeName.value}`
-        : 'Catálogo de skins',
+if (!props.preview) useSeoMeta({
+  title: () => (selected.value ? `${selected.value.marketName} | ${storeName.value}` : `Skins de ${storeName.value}`),
   description: () => summary.value,
   ogTitle: () => (selected.value ? selected.value.marketName : `Skins de ${storeName.value}`),
   ogDescription: () => summary.value,
@@ -244,186 +248,177 @@ useSeoMeta({
 
 <template>
   <div class="store">
-    <!-- Erro ao ler o inventário -->
-    <main v-if="problem" class="wrap problem">
-      <NuxtLink to="/" class="back">Voltar</NuxtLink>
-      <h1 class="display problem-title">{{ problem.title }}</h1>
-      <p class="problem-body">{{ problem.body }}</p>
-      <div class="problem-actions">
-        <button class="btn btn--primary" type="button" :disabled="status === 'pending'" @click="refresh()">
-          {{ status === 'pending' ? 'Consultando…' : 'Tentar de novo' }}
+    <header class="wrap store-head">
+      <div class="owner">
+        <img v-if="profile?.avatar" class="avatar" :src="profile.avatar" alt="" width="40" height="40" />
+        <span v-else class="avatar avatar--blank" aria-hidden="true">{{ storeName.charAt(0) }}</span>
+        <a v-if="profile?.url" :href="profile.url" target="_blank" rel="noopener" class="owner-link">
+          Perfil na Steam
+        </a>
+        <span v-if="store.demo" class="owner-note">Catálogo de exemplo com dados fictícios</span>
+      </div>
+
+      <h1 class="display store-name">{{ storeName }}</h1>
+      <p class="store-summary">
+        {{ summary }}
+        <template v-if="priceNote">{{ priceNote }}</template>
+      </p>
+
+      <div v-if="showWhatsapp || !preview" class="store-actions">
+        <a
+          v-if="showWhatsapp"
+          class="btn btn--primary"
+          :href="whatsappLink(whatsapp)"
+          target="_blank"
+          rel="noopener"
+        >
+          <AppIcon name="chat" />
+          Chamar no WhatsApp
+        </a>
+        <button v-if="!preview" class="btn" type="button" @click="copyStoreLink">
+          <AppIcon name="link" />
+          {{ copied ? 'Link copiado' : 'Copiar link da loja' }}
         </button>
-        <NuxtLink to="/" class="btn">Usar outro link</NuxtLink>
+      </div>
+    </header>
+
+    <div v-if="items.length" ref="toolbar" class="toolbar">
+      <!-- A ordem no HTML segue a do computador (para o Tab); no celular o CSS reordena. -->
+      <div class="wrap toolbar-inner">
+        <nav class="chips" aria-label="Categorias">
+          <button
+            v-for="chip in chips"
+            :key="chip.id"
+            type="button"
+            class="chip"
+            :aria-pressed="category === chip.id"
+            :disabled="!categoryCounts[chip.id] && category !== chip.id"
+            @click="category = chip.id"
+          >
+            {{ chip.label }}
+            <span class="chip-count">{{ categoryCounts[chip.id] ?? 0 }}</span>
+          </button>
+        </nav>
+
+        <label class="search">
+          <AppIcon name="search" />
+          <span class="visually-hidden">Buscar</span>
+          <input v-model="search" type="search" placeholder="Buscar skin ou sticker" enterkeyhint="search" />
+        </label>
+
+        <!-- No celular, ordem, desgaste e StatTrak ficam atrás deste botão para a barra fixa não crescer. -->
+        <button
+          class="btn filters-toggle"
+          type="button"
+          :aria-expanded="filtersOpen"
+          aria-controls="filtros"
+          @click="filtersOpen = !filtersOpen"
+        >
+          <AppIcon name="filter" />
+          Filtros
+          <span v-if="activeFilters" class="filters-count">{{ activeFilters }}</span>
+        </button>
+
+        <div id="filtros" class="extras" :class="{ 'is-open': filtersOpen }">
+          <label class="sort">
+            <span class="extras-label">Ordenar por</span>
+            <select v-model="sort">
+              <option value="raridade">Raridade</option>
+              <option value="desgaste">Menor float</option>
+              <option value="nome">Nome</option>
+            </select>
+          </label>
+
+          <div v-if="wearChips.length || hasStattrak" class="facets">
+            <span v-if="wearChips.length" id="desgaste-label" class="extras-label">Desgaste</span>
+            <div v-if="wearChips.length" class="wears" role="group" aria-labelledby="desgaste-label">
+              <button
+                v-for="w in wearChips"
+                :key="w.id"
+                type="button"
+                class="chip chip--wear"
+                :title="w.label"
+                :aria-pressed="wears.includes(w.id)"
+                :disabled="!wearAvailable.has(w.id) && !wears.includes(w.id)"
+                @click="toggleWear(w.id)"
+              >
+                {{ w.id }}<span class="visually-hidden"> ({{ w.label }})</span>
+              </button>
+            </div>
+            <button
+              v-if="hasStattrak"
+              type="button"
+              class="chip"
+              :aria-pressed="stattrakOnly"
+              :disabled="!stattrakAvailable && !stattrakOnly"
+              @click="stattrakOnly = !stattrakOnly"
+            >
+              StatTrak™
+            </button>
+          </div>
+        </div>
+
+        <div v-if="groups.length > 1" class="chips chips--sub" role="group" :aria-label="groupsLabel">
+          <button type="button" class="chip" :aria-pressed="!group" @click="group = null">
+            {{ groupsLabel === 'Tipos' ? 'Todos' : 'Todas' }}
+            <span class="chip-count">{{ categoryCounts[category] ?? 0 }}</span>
+          </button>
+          <button
+            v-for="name in groups"
+            :key="name"
+            type="button"
+            class="chip"
+            :aria-pressed="group === name"
+            :disabled="!groupCounts[name] && group !== name"
+            @click="group = group === name ? null : name"
+          >
+            {{ name }}
+            <span class="chip-count">{{ groupCounts[name] ?? 0 }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <main class="wrap catalog">
+      <h2 class="visually-hidden">Itens</h2>
+
+      <div v-if="!items.length" class="empty">
+        <p class="empty-title">Nenhum item de CS2 neste inventário</p>
+        <p>Quando houver skins no inventário, elas aparecem aqui.</p>
+      </div>
+
+      <div v-else-if="!filtered.length" class="empty">
+        <p class="empty-title">
+          Nada encontrado{{ search ? ` para “${search}”` : '' }}
+        </p>
+        <button class="btn" type="button" @click="clearFilters">Limpar busca e filtros</button>
+      </div>
+
+      <ul v-else class="grid">
+        <li v-for="item in visible" :key="item.id">
+          <SkinCard :item="item" @open="openItem" />
+        </li>
+      </ul>
+
+      <div v-if="filtered.length > visible.length" class="more">
+        <button class="btn" type="button" @click="limit += PAGE_SIZE">
+          Mostrar mais {{ Math.min(PAGE_SIZE, filtered.length - visible.length) }}
+        </button>
       </div>
     </main>
 
-    <template v-else-if="data">
-      <header class="wrap store-head">
-        <div class="owner">
-          <img v-if="profile?.avatar" class="avatar" :src="profile.avatar" alt="" width="40" height="40" />
-          <span v-else class="avatar avatar--blank" aria-hidden="true">{{ storeName.charAt(0) }}</span>
-          <a v-if="profile?.url" :href="profile.url" target="_blank" rel="noopener" class="owner-link">
-            Perfil na Steam
-          </a>
-          <span v-if="data.demo" class="owner-note">Catálogo de exemplo com dados fictícios</span>
-        </div>
+    <footer class="wrap store-foot">
+      <p>Inventário lido às {{ readAt }}. Itens vendidos podem levar alguns minutos para sumir daqui.</p>
+      <NuxtLink to="/">Conheça a Vitrine</NuxtLink>
+    </footer>
 
-        <h1 class="display store-name">{{ storeName }}</h1>
-        <p class="store-summary">
-          {{ summary }}
-          <template v-if="priceNote">{{ priceNote }}</template>
-        </p>
-
-        <div class="store-actions">
-          <a
-            v-if="whatsapp"
-            class="btn btn--primary"
-            :href="whatsappLink(whatsapp)"
-            target="_blank"
-            rel="noopener"
-          >
-            <AppIcon name="chat" />
-            Chamar no WhatsApp
-          </a>
-          <button class="btn" type="button" @click="copyStoreLink">
-            <AppIcon name="link" />
-            {{ copied ? 'Link copiado' : 'Copiar link da loja' }}
-          </button>
-        </div>
-      </header>
-
-      <div v-if="items.length" ref="toolbar" class="toolbar">
-        <!-- A ordem no HTML segue a do computador (para o Tab); no celular o CSS reordena. -->
-        <div class="wrap toolbar-inner">
-          <nav class="chips" aria-label="Categorias">
-            <button
-              v-for="chip in chips"
-              :key="chip.id"
-              type="button"
-              class="chip"
-              :aria-pressed="category === chip.id"
-              :disabled="!categoryCounts[chip.id] && category !== chip.id"
-              @click="category = chip.id"
-            >
-              {{ chip.label }}
-              <span class="chip-count">{{ categoryCounts[chip.id] ?? 0 }}</span>
-            </button>
-          </nav>
-
-          <label class="search">
-            <AppIcon name="search" />
-            <span class="visually-hidden">Buscar</span>
-            <input v-model="search" type="search" placeholder="Buscar skin ou sticker" enterkeyhint="search" />
-          </label>
-
-          <!-- No celular, ordem, desgaste e StatTrak ficam atrás deste botão para a barra fixa não crescer. -->
-          <button
-            class="btn filters-toggle"
-            type="button"
-            :aria-expanded="filtersOpen"
-            aria-controls="filtros"
-            @click="filtersOpen = !filtersOpen"
-          >
-            <AppIcon name="filter" />
-            Filtros
-            <span v-if="activeFilters" class="filters-count">{{ activeFilters }}</span>
-          </button>
-
-          <div id="filtros" class="extras" :class="{ 'is-open': filtersOpen }">
-            <label class="sort">
-              <span class="extras-label">Ordenar por</span>
-              <select v-model="sort">
-                <option value="raridade">Raridade</option>
-                <option value="desgaste">Menor float</option>
-                <option value="nome">Nome</option>
-              </select>
-            </label>
-
-            <div v-if="wearChips.length || hasStattrak" class="facets">
-              <span v-if="wearChips.length" id="desgaste-label" class="extras-label">Desgaste</span>
-              <div v-if="wearChips.length" class="wears" role="group" aria-labelledby="desgaste-label">
-                <button
-                  v-for="w in wearChips"
-                  :key="w.id"
-                  type="button"
-                  class="chip chip--wear"
-                  :title="w.label"
-                  :aria-pressed="wears.includes(w.id)"
-                  :disabled="!wearAvailable.has(w.id) && !wears.includes(w.id)"
-                  @click="toggleWear(w.id)"
-                >
-                  {{ w.id }}<span class="visually-hidden"> ({{ w.label }})</span>
-                </button>
-              </div>
-              <button
-                v-if="hasStattrak"
-                type="button"
-                class="chip"
-                :aria-pressed="stattrakOnly"
-                :disabled="!stattrakAvailable && !stattrakOnly"
-                @click="stattrakOnly = !stattrakOnly"
-              >
-                StatTrak™
-              </button>
-            </div>
-          </div>
-
-          <div v-if="groups.length > 1" class="chips chips--sub" role="group" :aria-label="groupsLabel">
-            <button type="button" class="chip" :aria-pressed="!group" @click="group = null">
-              {{ groupsLabel === 'Tipos' ? 'Todos' : 'Todas' }}
-              <span class="chip-count">{{ categoryCounts[category] ?? 0 }}</span>
-            </button>
-            <button
-              v-for="name in groups"
-              :key="name"
-              type="button"
-              class="chip"
-              :aria-pressed="group === name"
-              :disabled="!groupCounts[name] && group !== name"
-              @click="group = group === name ? null : name"
-            >
-              {{ name }}
-              <span class="chip-count">{{ groupCounts[name] ?? 0 }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <main class="wrap catalog">
-        <h2 class="visually-hidden">Itens</h2>
-
-        <div v-if="!items.length" class="empty">
-          <p class="empty-title">Nenhum item de CS2 neste inventário</p>
-          <p>Quando houver skins no inventário, elas aparecem aqui.</p>
-        </div>
-
-        <div v-else-if="!filtered.length" class="empty">
-          <p class="empty-title">
-            Nada encontrado{{ search ? ` para “${search}”` : '' }}
-          </p>
-          <button class="btn" type="button" @click="clearFilters">Limpar busca e filtros</button>
-        </div>
-
-        <ul v-else class="grid">
-          <li v-for="item in visible" :key="item.id">
-            <SkinCard :item="item" @open="openItem" />
-          </li>
-        </ul>
-
-        <div v-if="filtered.length > visible.length" class="more">
-          <button class="btn" type="button" @click="limit += PAGE_SIZE">
-            Mostrar mais {{ Math.min(PAGE_SIZE, filtered.length - visible.length) }}
-          </button>
-        </div>
-      </main>
-
-      <footer class="wrap store-foot">
-        <p>Inventário lido às {{ readAt }}. Itens vendidos podem levar alguns minutos para sumir daqui.</p>
-        <NuxtLink to="/">Crie um catálogo do seu inventário</NuxtLink>
-      </footer>
-
-      <SkinDetail :item="selected" :whatsapp="whatsapp" @close="closeItem" />
-    </template>
+    <SkinDetail
+      :item="selected"
+      :whatsapp="whatsapp"
+      :demo="store.demo"
+      :copy-link="!preview"
+      @close="closeItem"
+    />
   </div>
 </template>
 
@@ -467,6 +462,8 @@ useSeoMeta({
 }
 
 .owner-link {
+  display: inline-block;
+  padding-block: 0.25rem;
   text-underline-offset: 3px;
 }
 
@@ -550,7 +547,7 @@ useSeoMeta({
 .sort select {
   width: 100%;
   min-height: 42px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--field-line);
   border-radius: var(--radius-m);
   background: var(--stage);
 }
@@ -653,52 +650,6 @@ useSeoMeta({
 
 .chips::-webkit-scrollbar {
   display: none;
-}
-
-.chip {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 0.375rem;
-  min-height: 36px;
-  padding: 0 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-s);
-  background: transparent;
-  color: var(--text);
-  font-stretch: var(--semi);
-  font-weight: 560;
-  cursor: pointer;
-}
-
-.chip:hover {
-  background: var(--surface);
-}
-
-.chip[aria-pressed='true'] {
-  border-color: var(--accent-edge);
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.chip-count {
-  color: var(--muted);
-  font-size: var(--step--1);
-  font-variant-numeric: tabular-nums;
-}
-
-.chip[aria-pressed='true'] .chip-count {
-  color: var(--accent-ink-soft);
-}
-
-/* Chip que não traria nenhum item com os outros filtros ligados. */
-.chip:disabled {
-  color: var(--muted);
-  cursor: default;
-}
-
-.chip:disabled:hover {
-  background: transparent;
 }
 
 /*
@@ -824,43 +775,10 @@ useSeoMeta({
 }
 
 .store-foot a {
+  display: inline-block;
+  padding-block: 0.125rem;
   color: var(--text);
   text-underline-offset: 3px;
 }
 
-/* ---- Erro */
-.problem {
-  display: grid;
-  justify-items: start;
-  gap: 1.25rem;
-  padding-top: 2.5rem;
-  padding-bottom: 4rem;
-}
-
-@media (min-width: 48rem) {
-  .problem {
-    padding-top: 5rem;
-  }
-}
-
-.back {
-  color: var(--muted);
-  text-underline-offset: 3px;
-}
-
-.problem-title {
-  font-size: clamp(2.5rem, 9vw, 4.5rem);
-}
-
-.problem-body {
-  max-width: 36rem;
-  color: var(--muted);
-  font-size: var(--step-1);
-}
-
-.problem-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
 </style>

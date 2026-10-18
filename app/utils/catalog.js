@@ -89,13 +89,25 @@ export function normalizePhone(value) {
   return digits.length <= 11 ? `55${digits}` : digits
 }
 
+/** Sem `phone`, o WhatsApp pergunta para quem mandar a mensagem (usado na loja de exemplo). */
 export function whatsappLink(phone, item, pageUrl) {
   const text = item
     ? `Olá! Tenho interesse em ${item.marketName}${
         item.float != null ? ` (float ${formatFloat(item.float)})` : ''
       }.${pageUrl ? `\n${pageUrl}` : ''}`
-    : 'Olá! Vi seu catálogo de skins.'
+    : 'Olá! Vi sua loja de skins.'
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+}
+
+/** Botão "Criar minha loja": abre o WhatsApp do dono, com o link da prévia quando houver. */
+export function createStoreLink(ownerPhone, previewUrl) {
+  const text = `Olá! Quero criar minha loja na Vitrine.${previewUrl ? `\nMinha prévia: ${previewUrl}` : ''}`
+  return `https://wa.me/${ownerPhone}?text=${encodeURIComponent(text)}`
+}
+
+/** Páginas que mostram uma loja (e aceitam ?cor e ?fundo): a demo e as prévias. */
+export function isStorePath(path) {
+  return path.startsWith('/loja/') || /^\/previa\/[^/]+/.test(path)
 }
 
 export function searchText(item) {
@@ -113,10 +125,14 @@ export function normalizeText(value) {
     .toLowerCase()
 }
 
-/** Mensagens para os erros devolvidos pela API (campo data.code). */
-export function steamErrorMessage(error) {
-  const code = error?.data?.data?.code ?? error?.data?.code
-  switch (code) {
+/** Código do erro devolvido pela API (campo data.code). */
+export function errorCode(error) {
+  return error?.data?.data?.code ?? error?.data?.code ?? null
+}
+
+/** Mensagens para os erros devolvidos pela API. */
+export function errorMessage(error) {
+  switch (errorCode(error)) {
     case 'PRIVATE':
       return {
         title: 'Este inventário está privado',
@@ -136,6 +152,31 @@ export function steamErrorMessage(error) {
       return {
         title: 'Esse link não é da Steam',
         body: 'Cole o link do seu perfil (steamcommunity.com/id/seunome) ou o seu link de troca.',
+      }
+    case 'INVALID_PHONE':
+      return {
+        title: 'Confira o WhatsApp',
+        body: 'Use o DDD e o número, como (48) 99999-9999. Se preferir, deixe o campo vazio.',
+      }
+    case 'EXPIRED':
+      return {
+        title: 'Esta prévia expirou',
+        body: 'Cada prévia vale 24 horas. Gere outra com o mesmo link da Steam: leva poucos segundos.',
+      }
+    case 'PREVIEW_NOT_FOUND':
+      return {
+        title: 'Prévia não encontrada',
+        body: 'Confira o link. As prévias são apagadas alguns dias depois de expirar.',
+      }
+    case 'LIMIT':
+      return {
+        title: 'Muitas consultas seguidas',
+        body: 'Espere alguns minutos e tente de novo.',
+      }
+    case 'UNAVAILABLE':
+      return {
+        title: 'Não deu para abrir agora',
+        body: 'Tente de novo em alguns minutos.',
       }
     default:
       return {

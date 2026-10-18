@@ -1,8 +1,10 @@
 <script setup>
-const theme = useThemeHead()
+useThemeHead()
 </script>
 
 <template>
-  <NuxtLoadingIndicator :color="theme.accentEdge" :height="2" />
+  <!-- Cor pela variável do tema: o servidor e o navegador desenham igual, mesmo com ?cor na loja. -->
+  <NuxtLoadingIndicator color="var(--accent-edge)" :height="2" />
   <NuxtPage />
+  <SiteFooter />
 </template>

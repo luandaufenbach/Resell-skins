@@ -29,8 +29,8 @@ O roteiro está em [docs/fases.md](docs/fases.md).
 Node 22.21+ ou 24.11+ (o Nuxt 4.6 avisa em versões anteriores). `npm install` e `npm run dev`,
 depois http://localhost:3000. No app do Claude, o servidor sobe pela configuração `dev` do
 `.claude/launch.json`.
-Hoje existem `/` (formulário), `/loja/demo` (catálogo de exemplo, sem consultar a Steam) e
-`/loja/<steamid>?w=<whatsapp>`. A estrutura de pastas está no README.
+Hoje existem `/` (página inicial), `/previa` (formulário), `/previa/<id>` (prévia de 24h) e
+`/loja/demo` (catálogo de exemplo, sem consultar a Steam). A estrutura de pastas está no README.
 
 ## Confiança (regra inegociável)
 

@@ -3,6 +3,10 @@
 const props = defineProps({
   item: { type: Object, default: null },
   whatsapp: { type: String, default: '' },
+  // Loja de exemplo: o botão de WhatsApp abre a escolha de contato, com a mensagem pronta.
+  demo: { type: Boolean, default: false },
+  // Na demonstração da página inicial e na prévia, a skin não tem link para compartilhar.
+  copyLink: { type: Boolean, default: true },
 })
 const emit = defineEmits(['close'])
 
@@ -60,7 +64,7 @@ const accessoriesTitle = computed(() => {
 })
 
 // Mesmo valor no servidor e no navegador, para não dar diferença na hidratação.
-const origin = useRequestURL().origin
+const origin = useSiteUrl()
 const route = useRoute()
 const pageUrl = () => origin + route.fullPath
 </script>
@@ -142,7 +146,7 @@ const pageUrl = () => origin + route.fullPath
 
         <div class="sheet-actions">
           <a
-            v-if="whatsapp"
+            v-if="whatsapp || demo"
             class="btn btn--primary"
             :href="whatsappLink(whatsapp, item, pageUrl())"
             target="_blank"
@@ -151,11 +155,11 @@ const pageUrl = () => origin + route.fullPath
             <AppIcon name="chat" />
             Pedir no WhatsApp
           </a>
-          <button class="btn" type="button" @click="copy(pageUrl())">
+          <button v-if="copyLink" class="btn" type="button" @click="copy(pageUrl())">
             <AppIcon name="link" />
             {{ copied ? 'Link copiado' : 'Copiar link desta skin' }}
           </button>
-          <a class="btn" :href="item.steamUrl" target="_blank" rel="noopener">
+          <a v-if="item.steamUrl" class="btn" :href="item.steamUrl" target="_blank" rel="noopener">
             <AppIcon name="external" />
             Ver na Steam
           </a>

@@ -21,5 +21,23 @@ export default defineNuxtConfig({
     // NUXT_SUPABASE_URL e NUXT_SUPABASE_SECRET_KEY no .env.
     supabaseUrl: '',
     supabaseSecretKey: '',
+    // Cabeçalho com o IP do visitante, quando o site roda atrás de um proxy (a hospedagem).
+    // Usado no limite de consultas por IP. NUXT_IP_HEADER no .env.
+    ipHeader: '',
+    public: {
+      // Endereço do site, para links absolutos (ex.: https://dominio.com). NUXT_PUBLIC_SITE_URL no .env.
+      siteUrl: '',
+    },
+  },
+
+  // Em desenvolvimento o Nuxt fica atrás de um proxy próprio, que informa o IP neste cabeçalho.
+  $development: {
+    runtimeConfig: { ipHeader: 'x-forwarded-for' },
+  },
+
+  // Prévias e respostas da API ficam fora do Google.
+  routeRules: {
+    '/previa/*': { headers: { 'X-Robots-Tag': 'noindex' } },
+    '/api/**': { headers: { 'X-Robots-Tag': 'noindex' } },
   },
 })

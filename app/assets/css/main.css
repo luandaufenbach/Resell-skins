@@ -116,6 +116,15 @@ select {
   text-wrap: balance;
 }
 
+/* Nome do produto no topo das páginas que não são loja. */
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--step-2);
+  text-decoration: none;
+}
+
 /* Botões */
 .btn {
   display: inline-flex;
@@ -169,6 +178,53 @@ select {
   height: 18px;
 }
 
+/* Chips de filtro (loja e demonstração da página inicial) */
+.chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--text);
+  font-stretch: var(--semi);
+  font-weight: 560;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--surface);
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--accent-edge);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.chip-count {
+  color: var(--muted);
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip[aria-pressed='true'] .chip-count {
+  color: var(--accent-ink-soft);
+}
+
+/* Chip que não traria nenhum item com os outros filtros ligados. */
+.chip:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.chip:disabled:hover {
+  background: transparent;
+}
+
 /* Campos */
 .field {
   display: grid;
@@ -193,7 +249,7 @@ select {
   width: 100%;
   min-height: 48px;
   padding: 0 0.875rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--field-line);
   border-radius: var(--radius-m);
   background: var(--stage);
   color: var(--text);
@@ -201,6 +257,10 @@ select {
 
 .input::placeholder {
   color: var(--placeholder);
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--alert);
 }
 
 .input:focus-visible {

@@ -12,6 +12,26 @@ const HEADERS = {
   'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
 }
 
+// Freio de todas as consultas ao site da Steam somadas: ela bloqueia o IP do servidor inteiro,
+// então o limite por visitante não basta. Depois de um 429 dela, tudo para por 2 minutos em vez
+// de insistir e prolongar o bloqueio.
+const COMMUNITY_PER_MINUTE = 30
+const PAUSE_AFTER_429 = 2 * 60_000
+let quota = { reset: 0, used: 0 }
+let pausedUntil = 0
+
+function community(path, options) {
+  const now = Date.now()
+  if (now < pausedUntil) return Promise.reject(rateLimited())
+  if (quota.reset <= now) quota = { reset: now + 60_000, used: 0 }
+  if (++quota.used > COMMUNITY_PER_MINUTE) return Promise.reject(rateLimited())
+
+  return $fetch(`${COMMUNITY}${path}`, { headers: HEADERS, ...options }).catch((err) => {
+    if ((err?.response?.status ?? err?.statusCode) === 429) pausedUntil = Date.now() + PAUSE_AFTER_429
+    throw err
+  })
+}
+
 export function isSteamId64(value) {
   return /^7656119\d{10}$/.test(String(value))
 }
@@ -60,8 +80,7 @@ async function resolveVanity(vanity, apiKey) {
     if (res?.response?.success === 1) return res.response.steamid
   }
 
-  const xml = await $fetch(`${COMMUNITY}/id/${encodeURIComponent(vanity)}/?xml=1`, {
-    headers: HEADERS,
+  const xml = await community(`/id/${encodeURIComponent(vanity)}/?xml=1`, {
     responseType: 'text',
     timeout: 8000,
   }).catch((err) => {
@@ -75,8 +94,7 @@ async function resolveVanity(vanity, apiKey) {
 
 /** Nome e avatar do perfil, pelo XML público. Retorna null se não conseguir. */
 export async function fetchProfile(steamid) {
-  const xml = await $fetch(`${COMMUNITY}/profiles/${steamid}/?xml=1`, {
-    headers: HEADERS,
+  const xml = await community(`/profiles/${steamid}/?xml=1`, {
     responseType: 'text',
     timeout: 8000,
   })
@@ -95,13 +113,12 @@ export async function fetchInventory(steamid) {
   let startAssetId = null
 
   for (let i = 0; i < INVENTORY_MAX_PAGES; i++) {
-    const page = await $fetch(`${COMMUNITY}/inventory/${steamid}/730/2`, {
+    const page = await community(`/inventory/${steamid}/730/2`, {
       query: {
         l: 'brazilian',
         count: INVENTORY_PAGE_SIZE,
         ...(startAssetId && { start_assetid: startAssetId }),
       },
-      headers: HEADERS,
       timeout: 15000,
       retry: 0,
     }).catch((err) => {
@@ -158,18 +175,20 @@ function xmlTag(xml, tag) {
 function steamError(err) {
   const status = err?.response?.status ?? err?.statusCode
   if (status === 401 || status === 403) return privateInventory()
-  if (status === 429) {
-    return createError({
-      statusCode: 429,
-      statusMessage: 'A Steam limitou as consultas',
-      data: { code: 'RATE_LIMIT' },
-    })
-  }
+  if (status === 429) return rateLimited()
   if (status === 400 || status === 404) return notFound()
   return createError({
     statusCode: 502,
     statusMessage: 'A Steam não respondeu',
     data: { code: 'STEAM_DOWN' },
+  })
+}
+
+function rateLimited() {
+  return createError({
+    statusCode: 429,
+    statusMessage: 'A Steam limitou as consultas',
+    data: { code: 'RATE_LIMIT' },
   })
 }
 

@@ -59,20 +59,6 @@ export async function attachPrices(items) {
 
 // Desconto padrão da loja sobre o preço Steam (0.30 = 30%), da tabela de configuração.
 async function defaultDiscount() {
-  const [row] = await supabase('/rest/v1/configuracao', { query: { chave: 'eq.desconto_padrao', select: 'valor' } })
-  const value = Number(row?.valor)
+  const { desconto_padrao: value } = await readConfig(['desconto_padrao'])
   return value >= 0 && value < 1 ? value : 0.3
-}
-
-function supabase(path, options = {}) {
-  const { supabaseUrl, supabaseSecretKey } = useRuntimeConfig()
-  if (!supabaseUrl || !supabaseSecretKey) throw new Error('NUXT_SUPABASE_URL ou NUXT_SUPABASE_SECRET_KEY ausente')
-
-  return $fetch(path, {
-    baseURL: supabaseUrl,
-    headers: { apikey: supabaseSecretKey, Authorization: `Bearer ${supabaseSecretKey}` },
-    timeout: 8000,
-    retry: 1,
-    ...options,
-  })
 }
