@@ -115,7 +115,56 @@ Antes de começar: projeto no Supabase criado e chaves no `.env`.
 ## Fase 4: contas e lojas
 
 Antes de começar: site publicado na Render (no ar desde 18/10/2026 em
-https://vitrine-6ov4.onrender.com, veja o CLAUDE.md), Resend e Turnstile criados e chaves no `.env`.
+https://vitrine-6ov4.onrender.com, veja o CLAUDE.md), Resend e Turnstile criados e chaves nos
+lugares indicados abaixo.
+
+Contas (guia passado ao dono em 19/10/2026; as chaves nunca vão para o chat):
+
+- Turnstile (Cloudflare): widget "Vitrine", modo Managed, hostname `vitrine-6ov4.onrender.com`
+  (mais o domínio próprio, quando houver). Site Key e Secret Key só na Render, em
+  `NUXT_PUBLIC_TURNSTILE_SITE_KEY` e `NUXT_TURNSTILE_SECRET_KEY`. Em desenvolvimento, as chaves de
+  teste públicas da Cloudflare, que sempre passam.
+- Resend: a chave (permissão "Sending access") vai só no SMTP do Supabase (Authentication > Emails >
+  SMTP Settings: host `smtp.resend.com`, porta 465, usuário `resend`, remetente
+  `onboarding@resend.dev`). Quem manda os e-mails de conta é o Supabase, então ela não vai no `.env`
+  nem na Render. Sem domínio verificado, o Resend só entrega para o e-mail da própria conta, o que
+  basta para testar. Com o domínio, verificar no Resend e trocar o remetente.
+- Chave publishable do Supabase: passa a se chamar `NUXT_SUPABASE_PUBLISHABLE_KEY` (no `.env` e na
+  Render, salva com "Save only"), para não ir para o navegador.
+- Pendentes com o dono: colar o link de `/` no WhatsApp e escolher o nome do domínio.
+
+Plano proposto em 19/10/2026 (aguarda a aprovação do dono antes de escrever código):
+
+- Telas: `/cadastro`, `/entrar`, esqueci a senha, nova senha, confirmação do e-mail e um `/painel`
+  mínimo (situação da loja, verificação, atualizar inventário, sair). O painel completo é da fase 5.
+- Cadastro: link da Steam, WhatsApp, endereço da loja (slug), e-mail, senha (mínimo 8) e Turnstile.
+  Vindo da prévia, Steam e WhatsApp já vêm preenchidos. A loja só é criada depois que o e-mail é
+  confirmado.
+- Tudo passa pelo nosso servidor: sessão em cookie httpOnly, limite de login por IP e por e-mail,
+  mensagens que não revelam se o e-mail já tem conta. O navegador não recebe chave do Supabase.
+- E-mails de conta em português, com os modelos guardados no repositório; o dono cola no Supabase.
+- Banco com RLS em todas as tabelas: lojas, itens, sincronizações, movimentações, eventos, pagamentos
+  (sem tela até a fase 6) e testes grátis já usados. O revendedor só lê a própria loja; toda gravação
+  passa pelo servidor.
+- Verificação: código `VTR-XXXX` gerado no servidor, com validade de 24h, procurado no XML público do
+  SteamID salvo na loja.
+- Slug: minúsculas, números e hífen; recusa os nomes reservados e os que contêm "steam" ou "valve".
+- Loja em `/<slug>` lê só o banco. Eventos enviados pelo navegador, contados uma vez por visitante a
+  cada 30 minutos.
+- "Criar minha loja" (prévia e página inicial) leva ao cadastro. A demo vai para `/demo`, e
+  `/loja/demo` redireciona.
+
+Decisões propostas (recomendação, aguardam o dono):
+
+1. A prévia guarda uma cópia do inventário no banco por 24h, em vez de reler a Steam a cada 10
+   minutos: na Render grátis o servidor dorme e perde o cache. A cópia é apagada junto com a prévia.
+   Se aprovado, atualizar a seção Steam do CLAUDE.md.
+2. Os 7 dias grátis contam a partir da verificação, não do cadastro, e o SteamID só fica ocupado
+   quando a loja é verificada: quem cadastra o inventário de outra pessoa sem conseguir verificar não
+   gasta o teste dela nem trava o SteamID.
+3. Verificação manual pelo admin: por enquanto um comando pronto no SQL Editor do Supabase; o botão
+   no `/admin` vem na fase 6, com o resto da administração.
+4. Intervalo mínimo de 10 minutos entre duas atualizações do inventário.
 
 - [ ] Cadastro com verificação de e-mail, recuperação de senha e Turnstile.
 - [ ] Limite de tentativas no login.
@@ -219,3 +268,5 @@ Ideias que surgirem durante as fases e ficaram fora do escopo.
   Pré-carregar o arquivo da fonte.
 - Campo com erro no formulário da prévia: com o foco, a borda volta para a cor de foco e perde o
   vermelho do erro.
+- Páginas de termos e de privacidade (LGPD) antes do primeiro revendedor: o cadastro guarda e-mail,
+  WhatsApp e SteamID.

@@ -11,6 +11,7 @@ O roteiro está em [docs/fases.md](docs/fases.md).
 
 ## Forma de trabalhar
 
+- Falar sempre em português com o dono: respostas, resumos, perguntas e botões.
 - Uma fase por sessão, seguindo o docs/fases.md. Começar com um plano curto e esperar aprovação
   antes de escrever código.
 - Nada fora do escopo da fase. Ideias novas vão para a seção "Depois" do docs/fases.md.
