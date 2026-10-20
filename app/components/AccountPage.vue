@@ -1,22 +1,24 @@
 <script setup>
 // Moldura das telas de conta (cadastro, entrar, senha, confirmação): o nome do produto, o título
-// e o formulário alinhados à esquerda, como a tela da prévia. O slot `aside` vai ao lado do
-// formulário no computador e abaixo dele no celular.
+// e o formulário alinhados à esquerda. No computador, a vitrine de exemplo ocupa o lado direito,
+// com o endereço `slug` em cima (o cadastro passa o que está sendo digitado). No celular, fica só
+// o formulário.
 defineProps({
   title: { type: String, required: true },
+  slug: { type: String, default: '' },
 })
 </script>
 
 <template>
   <main class="wrap account">
     <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
-    <div class="account-layout" :class="{ 'has-aside': $slots.aside }">
+    <div class="account-layout">
       <div class="account-body">
         <h1 class="display account-title">{{ title }}</h1>
         <slot />
       </div>
-      <aside v-if="$slots.aside" class="account-aside">
-        <slot name="aside" />
+      <aside class="account-aside" aria-label="Exemplo de loja">
+        <StoreWindow :slug="slug" />
       </aside>
     </div>
   </main>
@@ -45,6 +47,10 @@ defineProps({
   font-size: clamp(2.5rem, 9vw, 4.25rem);
 }
 
+.account-aside {
+  display: none;
+}
+
 @media (min-width: 48rem) {
   .account-layout {
     margin-top: 4rem;
@@ -52,14 +58,19 @@ defineProps({
 }
 
 @media (min-width: 64rem) {
-  .account-layout.has-aside {
-    grid-template-columns: minmax(0, 32rem) minmax(0, 24rem);
-    gap: 6rem;
+  .account-layout {
+    grid-template-columns: minmax(0, 32rem) minmax(0, 1fr);
+    gap: 4rem;
   }
 
-  /* Alinha o texto ao lado com o primeiro campo, não com o título. */
+  /* Acompanha a rolagem do formulário longo do cadastro, sem deixar a coluna vazia embaixo. */
   .account-aside {
-    padding-top: 6.5rem;
+    display: block;
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+    max-width: 44rem;
+    padding-top: 0.5rem;
   }
 }
 

@@ -12,6 +12,16 @@ export const CATEGORIES = [
   { id: 'outros', label: 'Outros' },
 ]
 
+/** Skins da loja de exemplo mostradas fora dela: raridades e categorias diferentes. */
+export const SHOWCASE_ITEMS = [
+  '★ Karambit | Doppler (Factory New)',
+  'StatTrak™ AK-47 | Redline (Field-Tested)',
+  '★ Sport Gloves | Vice (Field-Tested)',
+  'AWP | Atheris (Factory New)',
+  'Desert Eagle | Printstream (Factory New)',
+  'M4A1-S | Printstream (Minimal Wear)',
+]
+
 /** Segundo nível do filtro: a arma (nome em inglês) ou, em Agentes e Outros, o tipo do item. */
 export function itemGroup(item) {
   return item.category === 'agentes' || item.category === 'outros' ? (item.type ?? 'Outros') : item.weapon

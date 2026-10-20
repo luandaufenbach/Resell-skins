@@ -40,7 +40,8 @@ app/
   pages/[slug].vue           loja do revendedor (ou "loja indisponível")
   pages/cadastro.vue, entrar.vue, esqueci-senha.vue, nova-senha.vue, confirmar.vue  conta
   pages/painel.vue           painel mínimo do revendedor
-  components/AccountPage.vue moldura das telas de conta
+  components/AccountPage.vue moldura das telas de conta (formulário e, no computador, a vitrine)
+  components/StoreWindow.vue vitrine de exemplo ao lado dos formulários, com o endereço da loja
   components/StoreFields.vue Steam, WhatsApp e endereço (cadastro e criação da loja no painel)
   components/TurnstileWidget.vue  caixa de verificação da Cloudflare (cadastro e prévia)
   components/StoreCatalog.vue  loja inteira (filtros, busca, ordenação, item aberto, eventos)

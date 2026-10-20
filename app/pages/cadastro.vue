@@ -64,7 +64,7 @@ useSeoMeta({
     <ResendConfirmation :email="sentTo" />
   </AccountPage>
 
-  <AccountPage v-else title="Criar minha loja">
+  <AccountPage v-else title="Criar minha loja" :slug="form.slug">
     <p class="lead">Sua loja fica pronta em poucos minutos, com as skins do seu inventário.</p>
 
     <TrustNote />
@@ -105,8 +105,8 @@ useSeoMeta({
       <NuxtLink to="/previa">Ver uma prévia antes</NuxtLink>
     </div>
 
-    <template #aside>
-      <h2 class="next-title">Depois do cadastro</h2>
+    <section class="next-block" aria-labelledby="depois-do-cadastro">
+      <h2 id="depois-do-cadastro" class="next-title">Depois do cadastro</h2>
       <ol class="next">
         <li>Abra o link que mandamos para o seu e-mail e crie a sua senha.</li>
         <li>Confira os dados da loja e cole um código no seu perfil da Steam. Isso prova que o inventário é seu, sem login.</li>
@@ -115,11 +115,17 @@ useSeoMeta({
           <template v-if="monthly">Depois, {{ formatPlanPrice(monthly) }} por mês pelo Pix, sem fidelidade.</template>
         </li>
       </ol>
-    </template>
+    </section>
   </AccountPage>
 </template>
 
 <style scoped>
+.next-block {
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
 .next-title {
   font-size: var(--step-1);
   font-weight: 620;
