@@ -25,3 +25,12 @@ services:
         sync: false
       - key: NUXT_SUPABASE_SECRET_KEY
         sync: false
+      - key: NUXT_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: NUXT_PUBLIC_SITE_URL
+        sync: false
+      # Cloudflare Turnstile (cadastro e prévia).
+      - key: NUXT_PUBLIC_TURNSTILE_SITE_KEY
+        sync: false
+      - key: NUXT_TURNSTILE_SECRET_KEY
+        sync: false

@@ -1,6 +1,7 @@
-// Prévias da loja (tabela previas): geradas em /previa sem conta, valem 24h. Quando vencem, o
-// banco apaga o WhatsApp e o SteamID, e a linha some 7 dias depois (interno.limpar_previas,
-// agendada no próprio banco).
+// Prévias da loja (tabela previas): geradas em /previa sem conta, valem 24h. A prévia guarda uma
+// cópia do inventário lido na hora, e quem abre o link lê essa cópia, não a Steam. Quando vence,
+// o banco apaga o WhatsApp, o SteamID e a cópia, e a linha some 7 dias depois
+// (interno.limpar_previas, agendada no próprio banco).
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 const ID_LENGTH = 10
@@ -14,14 +15,25 @@ export function previewCookie(id) {
   return `previa_${id}`
 }
 
-/** Grava a prévia e devolve o id. `whatsapp` já vem só com números (ou vazio). */
-export async function createPreview(steamid, whatsapp) {
+/**
+ * Grava a prévia com a cópia do inventário (`store` de getStore) e devolve o id. `whatsapp` já vem
+ * só com números (ou vazio).
+ */
+export async function createPreview(store, whatsapp) {
   const id = randomId()
   await database(() =>
     supabase('/rest/v1/previas', {
       method: 'POST',
-      body: { id, steamid, whatsapp: whatsapp || null },
+      body: {
+        id,
+        steamid: store.steamid,
+        whatsapp: whatsapp || null,
+        perfil: store.profile,
+        itens: store.items,
+        lido_em: new Date(store.fetchedAt).toISOString(),
+      },
       headers: { Prefer: 'return=minimal' },
+      timeout: 20000,
     }),
   )
   return id
@@ -30,10 +42,35 @@ export async function createPreview(steamid, whatsapp) {
 /** { steamid, whatsapp, expiresAt } ou null se a prévia não existe (ou já foi apagada). */
 export async function findPreview(id) {
   const [row] = await database(() =>
-    supabase('/rest/v1/previas', { query: { id: `eq.${id}`, select: 'steamid,whatsapp,expira_em' } }),
+    supabase('/rest/v1/previas', { query: { id: `eq.${id}`, select: 'steamid,whatsapp,perfil,expira_em' } }),
   )
-  return row ? { steamid: row.steamid, whatsapp: row.whatsapp ?? '', expiresAt: row.expira_em } : null
+  return row
+    ? { steamid: row.steamid, whatsapp: row.whatsapp ?? '', profile: row.perfil, expiresAt: row.expira_em }
+    : null
 }
+
+/**
+ * Loja da prévia com preços, em cache por 10 minutos: a cópia do inventário mais os preços do
+ * dia. Prévia de antes da cópia existir (sem `itens`) lê a Steam, como era antes.
+ */
+export const getPreviewStore = defineCachedFunction(
+  async (id, steamid) => {
+    const [row] = await database(() =>
+      supabase('/rest/v1/previas', { query: { id: `eq.${id}`, select: 'perfil,itens,lido_em' } }),
+    )
+    const store = row?.itens
+      ? { steamid, profile: row.perfil, items: row.itens, fetchedAt: Date.parse(row.lido_em) }
+      : await getStore(steamid)
+    const { items, pricesOk } = await attachPrices(store.items)
+    return { ...store, items, pricesOk }
+  },
+  {
+    name: 'previa',
+    maxAge: 60 * 10,
+    getKey: (id) => id,
+    validate: (entry) => entry.value !== undefined && entry.value.pricesOk !== false,
+  },
+)
 
 async function database(call) {
   try {

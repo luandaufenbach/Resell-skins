@@ -136,31 +136,51 @@ export async function fetchInventory(steamid) {
   return pages
 }
 
-/**
- * Inventário + perfil já normalizados, guardados em cache por 10 minutos.
- * A Steam bloqueia rápido (erro 429), então o catálogo nunca deve consultá-la a cada visita.
- * Erros não entram no cache.
- */
-export const getStore = defineCachedFunction(
-  async (steamid) => {
-    const [profile, pages] = await Promise.all([
-      fetchProfile(steamid).catch(() => null),
-      fetchInventory(steamid),
-    ])
+/** Inventário + perfil já normalizados, lidos agora da Steam. */
+export async function readStore(steamid) {
+  const [profile, pages] = await Promise.all([
+    fetchProfile(steamid).catch(() => null),
+    fetchInventory(steamid),
+  ])
 
-    return {
-      steamid,
-      profile,
-      items: normalizeInventory(pages, steamid),
-      fetchedAt: Date.now(),
-    }
-  },
-  {
-    name: 'store',
-    maxAge: 60 * 10,
-    getKey: (steamid) => steamid,
-  },
-)
+  return {
+    steamid,
+    profile,
+    items: normalizeInventory(pages, steamid),
+    fetchedAt: Date.now(),
+  }
+}
+
+/**
+ * readStore guardado em cache por 10 minutos, para quem gera a prévia e logo se cadastra não ler
+ * a Steam duas vezes. A Steam bloqueia rápido (erro 429). Erros não entram no cache.
+ * Sem swr: vencido o cache, lê de novo em vez de devolver o inventário antigo. A prévia e a
+ * primeira leitura da loja guardam o que vier daqui.
+ */
+export const getStore = defineCachedFunction(readStore, {
+  name: 'store',
+  maxAge: 60 * 10,
+  swr: false,
+  getKey: (steamid) => steamid,
+})
+
+/**
+ * Procura o código de posse no resumo, no nome e no nome real do perfil, pelo XML público lido
+ * agora (sem cache): o revendedor acabou de editar o perfil.
+ */
+export async function profileHasCode(steamid, code) {
+  const xml = await community(`/profiles/${steamid}/?xml=1`, {
+    responseType: 'text',
+    timeout: 8000,
+    query: { t: Date.now() },
+  }).catch((err) => {
+    throw steamError(err)
+  })
+  if (!xml || xml.includes('<error>')) throw notFound()
+
+  const text = ['summary', 'steamID', 'realname'].map((tag) => xmlTag(xml, tag) ?? '').join('\n')
+  return text.toUpperCase().includes(code.toUpperCase())
+}
 
 // ---------------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 <script setup>
 // Loja de exemplo: dados fictícios, preços reais da tabela. Não consulta a Steam.
-// Na fase 4 passa a ser /demo.
+// /loja/demo, o endereço antigo, redireciona para cá (server/middleware/redirecionar.js).
 const { data, error, refresh, status } = await useFetch('/api/demo')
 const problem = computed(() => (error.value ? errorMessage(error.value) : null))
 </script>

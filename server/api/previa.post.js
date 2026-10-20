@@ -1,6 +1,7 @@
-// POST /api/previa  { url: <link do perfil, link de troca ou apelido>, whatsapp: "5548..." | "" }
+// POST /api/previa  { url: <link do perfil, link de troca ou apelido>, whatsapp: "5548..." | "",
+//                     turnstile: <token> }
 // Resposta: { id }. O inventário é lido antes de gravar, para o erro (link errado, inventário
-// privado) aparecer no formulário e não na prévia.
+// privado) aparecer no formulário e não na prévia. A prévia guarda uma cópia do que foi lido.
 // Quem cria recebe um cookie da prévia: só esse navegador vê os botões de WhatsApp nela. Assim
 // ninguém monta uma "loja" com o inventário de outra pessoa e o próprio WhatsApp para enganar
 // comprador.
@@ -18,11 +19,13 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  await verifyTurnstile(event, body?.turnstile)
+
   const { steamApiKey } = useRuntimeConfig(event)
   const steamid = await resolveSteamId(body?.url, steamApiKey)
-  await getPricedStore(steamid)
+  const store = await getStore(steamid)
 
-  const id = await createPreview(steamid, whatsapp)
+  const id = await createPreview(store, whatsapp)
   setCookie(event, previewCookie(id), '1', {
     httpOnly: true,
     sameSite: 'lax',

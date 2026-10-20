@@ -1,0 +1,23 @@
+<!--
+  Modelo do e-mail de confirmação do cadastro.
+  Supabase > Authentication > Emails > Templates > Confirm signup.
+  Assunto: Confirme seu e-mail na Vitrine
+  O link usa o Site URL (Authentication > URL Configuration) e abre /confirmar, que pede um clique
+  antes de confirmar.
+-->
+<div style="font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5; color: #1d232c; max-width: 480px">
+  <p style="font-size: 22px; font-weight: bold; margin: 0 0 16px">Vitrine</p>
+  <p style="margin: 0 0 16px">Falta confirmar o seu e-mail para criar a sua loja.</p>
+  <p style="margin: 0 0 24px">
+    <a
+      href="{{ .SiteURL }}/confirmar?token_hash={{ .TokenHash }}"
+      style="display: inline-block; padding: 12px 20px; background: #1d232c; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold"
+      >Confirmar e-mail</a
+    >
+  </p>
+  <p style="margin: 0 0 16px; color: #566173; font-size: 14px">
+    O link vale uma vez só. Depois de confirmar, você cola um código no seu perfil da Steam para provar que o
+    inventário é seu. Não pedimos login da Steam.
+  </p>
+  <p style="margin: 0; color: #566173; font-size: 14px">Se você não se cadastrou na Vitrine, ignore este e-mail.</p>
+</div>

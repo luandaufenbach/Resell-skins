@@ -1,13 +1,19 @@
 <script setup>
-// Loja inteira (cabeçalho, filtros, grade e ficha do item), usada na demo e na prévia.
-// `store` é a resposta de /api/demo ou /api/previa/:id.
+// Loja inteira (cabeçalho, filtros, grade e ficha do item), usada na demo, na prévia e na loja do
+// revendedor. `store` é a resposta de /api/demo, /api/previa/:id ou /api/loja/:slug.
 const props = defineProps({
   store: { type: Object, required: true },
   whatsapp: { type: String, default: '' },
   // Prévia: sem botões de copiar link e sem título e imagem de compartilhamento da loja. Ela não
   // é uma loja verificada e não deve circular como se fosse.
   preview: { type: Boolean, default: false },
+  // Loja do revendedor: conta visitas, skins abertas e cliques no WhatsApp.
+  slug: { type: String, default: '' },
 })
+
+function track(tipo, item = null) {
+  if (props.slug) sendStoreEvent(props.slug, tipo, item)
+}
 
 // Na loja de exemplo o botão de WhatsApp abre a escolha de contato, com a mensagem pronta.
 const showWhatsapp = computed(() => Boolean(props.whatsapp || props.store.demo))
@@ -195,6 +201,12 @@ function clearFilters() {
 
 // ---- Item aberto (?i=assetid), assim o link de uma skin específica pode ser compartilhado
 const selected = computed(() => items.value.find((item) => item.id === route.query.i) ?? null)
+
+onMounted(() => {
+  track('visita')
+  if (selected.value) track('item', selected.value.id)
+})
+watch(selected, (item) => item && track('item', item.id))
 let openedHere = false
 
 function openItem(item) {
@@ -220,15 +232,8 @@ function copyStoreLink() {
   copy(url.toString())
 }
 
-const readAt = computed(() =>
-  props.store.fetchedAt
-    ? new Intl.DateTimeFormat('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'America/Sao_Paulo',
-      }).format(props.store.fetchedAt)
-    : '',
-)
+// A loja e a prévia mostram o inventário da última leitura, não o de agora.
+const readAt = computed(() => (props.store.fetchedAt ? formatDateTime(props.store.fetchedAt) : ''))
 
 // ---- Prévia do link no WhatsApp
 const shareImage = computed(() => {
@@ -271,6 +276,7 @@ if (!props.preview) useSeoMeta({
           :href="whatsappLink(whatsapp)"
           target="_blank"
           rel="noopener"
+          @click="track('whatsapp')"
         >
           <AppIcon name="chat" />
           Chamar no WhatsApp
@@ -408,7 +414,7 @@ if (!props.preview) useSeoMeta({
     </main>
 
     <footer class="wrap store-foot">
-      <p>Inventário atualizado às {{ readAt }}. Itens vendidos saem da loja em até 10 minutos.</p>
+      <p v-if="readAt">Inventário lido em {{ readAt }}.</p>
       <NuxtLink to="/">Conheça a Vitrine</NuxtLink>
     </footer>
 
@@ -418,6 +424,7 @@ if (!props.preview) useSeoMeta({
       :demo="store.demo"
       :copy-link="!preview"
       @close="closeItem"
+      @whatsapp="track('whatsapp', selected?.id)"
     />
   </div>
 </template>

@@ -240,7 +240,8 @@ function readPattern(props) {
   return Number.isInteger(value) ? value : null
 }
 
-function compareItems(a, b) {
+/** Ordem do catálogo: raridade (★ no topo), categoria, arma, skin e desgaste. */
+export function compareItems(a, b) {
   return (
     b.rarity.rank - a.rarity.rank ||
     CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category) ||

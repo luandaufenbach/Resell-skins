@@ -26,7 +26,7 @@ const swatch = (c) => (c.hex ? `#${c.hex}` : buildTheme({ fundo: background.valu
 
 // A loja inteira abre com o mesmo tema escolhido aqui.
 const fullStore = computed(() => ({
-  path: '/loja/demo',
+  path: '/demo',
   query: { cor: options.value.cor ?? undefined, fundo: background.value === 'claro' ? 'claro' : undefined },
 }))
 

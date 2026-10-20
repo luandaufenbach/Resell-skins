@@ -167,8 +167,9 @@ select {
   font-size: var(--step-1);
 }
 
+/* Desligado por ainda não poder (ex.: atualizar antes do intervalo) ou enquanto espera a resposta. */
 .btn:disabled {
-  cursor: progress;
+  cursor: default;
   opacity: 0.7;
 }
 

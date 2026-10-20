@@ -30,8 +30,13 @@ O roteiro está em [docs/fases.md](docs/fases.md).
 Node 22.21+ ou 24.11+ (o Nuxt 4.6 avisa em versões anteriores). `npm install` e `npm run dev`,
 depois http://localhost:3000. No app do Claude, o servidor sobe pela configuração `dev` do
 `.claude/launch.json`.
-Hoje existem `/` (página inicial), `/previa` (formulário), `/previa/<id>` (prévia de 24h) e
-`/loja/demo` (catálogo de exemplo, sem consultar a Steam). A estrutura de pastas está no README.
+Hoje existem `/` (página inicial), `/previa` (formulário), `/previa/<id>` (prévia de 24h), `/demo`
+(catálogo de exemplo, sem consultar a Steam), as telas de conta (`/cadastro`, `/entrar`,
+`/esqueci-senha`, `/nova-senha`, `/confirmar`), o `/painel` mínimo e as lojas em `/<slug>`. A
+estrutura de pastas está no README.
+Para testar contas sem mandar e-mail, crie a conta pela API de admin do Supabase (`generate_link`)
+com e-mail `@vitrine.test` e abra `/confirmar?token_hash=...`. No fim, apague as contas de teste e
+as linhas de `testes_usados` que elas criaram: senão o SteamID usado no teste perde o teste grátis.
 
 ## Confiança (regra inegociável)
 
@@ -39,7 +44,7 @@ Hoje existem `/` (página inicial), `/previa` (formulário), `/previa/<id>` (pr�
   de dados públicos. Não usar a logo da Steam nem nomes ou domínios parecidos com "Steam".
 - Isso é argumento de venda e aparece na interface: "Não pedimos login da Steam. Usamos só o seu
   inventário público."
-- Posse do inventário: no último passo do cadastro, o sistema mostra um código (ex.: `VTR-4F7K`)
+- Posse do inventário: no painel, depois de criar a loja, o sistema mostra um código (ex.: `VTR-4F7K`)
   com botão de copiar e um link para editar o perfil na Steam. O revendedor cola o código no
   resumo ou no nome do perfil e clica em "Verificar"; o sistema lê o XML público do perfil e
   confirma. Depois ele pode apagar o código. A tela explica que isso prova que o inventário é
@@ -96,8 +101,11 @@ Nomes reservados para slug: todas as rotas acima, mais `api`, `loja`, `ajuda`, `
 ## Steam
 
 - O visitante da loja nunca dispara consulta à Steam. O inventário fica salvo no banco e o
-  revendedor clica em "Atualizar inventário" (com intervalo mínimo). A prévia usa o cache atual
-  de 10 minutos.
+  revendedor clica em "Atualizar inventário" (no máximo a cada 10 minutos). A prévia guarda uma
+  cópia do inventário lido na hora, por 24h, apagada junto com a prévia (decidido em 19/10/2026:
+  na Render grátis o servidor dorme e perde o cache).
+- Os 7 dias grátis contam a partir da verificação, e o SteamID só fica ocupado quando a loja é
+  verificada (decidido em 19/10/2026).
 - Cada atualização grava o que entrou e o que saiu do inventário (base do relatório de vendas).
 - Esconder itens permanentemente não trocáveis: não trocável e sem data de liberação (medalhas,
   moedas, troféus). Item com trava temporária aparece com "Disponível em dd/mm". Não filtrar por

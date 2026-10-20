@@ -5,7 +5,6 @@ const route = useRoute()
 const id = computed(() => String(route.params.id))
 
 const { data, error, refresh, status } = await useFetch(() => `/api/previa/${id.value}`)
-const { data: config } = await usePublicConfig()
 
 const problem = computed(() => (error.value ? errorMessage(error.value) : null))
 const gone = computed(() => ['EXPIRED', 'PREVIEW_NOT_FOUND'].includes(errorCode(error.value)))
@@ -14,9 +13,9 @@ const gone = computed(() => ['EXPIRED', 'PREVIEW_NOT_FOUND'].includes(errorCode(
 if (import.meta.server && error.value) setResponseStatus(useRequestEvent(), error.value.statusCode)
 
 const origin = useSiteUrl()
-const createLink = computed(() =>
-  config.value?.ownerWhatsapp ? createStoreLink(config.value.ownerWhatsapp, `${origin}/previa/${id.value}`) : null,
-)
+// Quem criou a prévia vai para o cadastro com Steam e WhatsApp preenchidos; quem só recebeu o
+// link vai para o início, que explica o que é a Vitrine.
+const createTo = computed(() => (data.value?.owner ? { path: '/cadastro', query: { previa: id.value } } : '/'))
 
 // Título e imagem de compartilhamento genéricos: sem o nome do perfil, o link não passa por loja.
 const shareText = 'Prévia gerada a partir de um inventário público da Steam. Não é uma loja verificada.'
@@ -34,10 +33,7 @@ useSeoMeta({
   <StoreProblem v-if="problem" :problem="problem">
     <template v-if="gone">
       <NuxtLink to="/previa" class="btn btn--primary">Gerar outra prévia</NuxtLink>
-      <a v-if="createLink" class="btn" :href="createLink" target="_blank" rel="noopener">
-        <AppIcon name="chat" />
-        Criar minha loja
-      </a>
+      <NuxtLink to="/cadastro" class="btn">Criar minha loja</NuxtLink>
     </template>
     <template v-else>
       <button class="btn btn--primary" type="button" :disabled="status === 'pending'" @click="refresh()">
@@ -49,6 +45,6 @@ useSeoMeta({
 
   <div v-else-if="data">
     <StoreCatalog :store="data" :whatsapp="data.whatsapp" preview />
-    <PreviewBar :expires-at="data.expiresAt" :create-link="createLink" />
+    <PreviewBar :expires-at="data.expiresAt" :create-to="createTo" />
   </div>
 </template>

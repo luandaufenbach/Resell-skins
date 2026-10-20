@@ -17,27 +17,50 @@ export default defineNuxtConfig({
     // pela API oficial. Sem ela, usamos o XML público do perfil.
     // Defina no arquivo .env como NUXT_STEAM_API_KEY=...
     steamApiKey: '',
-    // Banco (Supabase). A chave secreta ignora o RLS: só o servidor usa.
-    // NUXT_SUPABASE_URL e NUXT_SUPABASE_SECRET_KEY no .env.
+    // Banco (Supabase). A chave secreta ignora o RLS: só o servidor usa. A publishable também
+    // fica só no servidor: login e painel passam por ele.
+    // NUXT_SUPABASE_URL, NUXT_SUPABASE_SECRET_KEY e NUXT_SUPABASE_PUBLISHABLE_KEY no .env.
     supabaseUrl: '',
     supabaseSecretKey: '',
+    supabasePublishableKey: '',
+    // Chave secreta do Cloudflare Turnstile (cadastro e prévia). NUXT_TURNSTILE_SECRET_KEY.
+    turnstileSecretKey: '',
     // Cabeçalho com o IP do visitante, quando o site roda atrás de um proxy (a hospedagem).
     // Usado no limite de consultas por IP. NUXT_IP_HEADER no .env.
     ipHeader: '',
     public: {
       // Endereço do site, para links absolutos (ex.: https://dominio.com). NUXT_PUBLIC_SITE_URL no .env.
       siteUrl: '',
+      // Chave do site do Turnstile (vai para o navegador). NUXT_PUBLIC_TURNSTILE_SITE_KEY.
+      turnstileSiteKey: '',
     },
   },
 
-  // Em desenvolvimento o Nuxt fica atrás de um proxy próprio, que informa o IP neste cabeçalho.
   $development: {
-    runtimeConfig: { ipHeader: 'x-forwarded-for' },
+    runtimeConfig: {
+      // Em desenvolvimento o Nuxt fica atrás de um proxy próprio, que informa o IP neste cabeçalho.
+      ipHeader: 'x-forwarded-for',
+      // Chaves de teste públicas da Cloudflare, que sempre passam. As de verdade ficam só na hospedagem.
+      turnstileSecretKey: '1x0000000000000000000000000000000AA',
+      public: { turnstileSiteKey: '1x00000000000000000000AA' },
+    },
   },
 
-  // Prévias e respostas da API ficam fora do Google.
+  nitro: {
+    // Cache em memória (inventários, lojas e prévias com preço) com teto: o que sai primeiro é o
+    // que ficou mais tempo sem uso. O servidor da Render grátis tem 512 MB.
+    storage: { cache: { driver: 'lru-cache', max: 2000, maxSize: 64 * 1024 * 1024 } },
+  },
+
+  // Prévias, telas de conta e respostas da API ficam fora do Google.
   routeRules: {
     '/previa/*': { headers: { 'X-Robots-Tag': 'noindex' } },
     '/api/**': { headers: { 'X-Robots-Tag': 'noindex' } },
+    '/cadastro': { headers: { 'X-Robots-Tag': 'noindex' } },
+    '/entrar': { headers: { 'X-Robots-Tag': 'noindex' } },
+    '/esqueci-senha': { headers: { 'X-Robots-Tag': 'noindex' } },
+    '/nova-senha': { headers: { 'X-Robots-Tag': 'noindex' } },
+    '/confirmar': { headers: { 'X-Robots-Tag': 'noindex' } },
+    '/painel': { headers: { 'X-Robots-Tag': 'noindex' } },
   },
 })

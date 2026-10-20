@@ -4,7 +4,8 @@
 // itens.
 const props = defineProps({
   expiresAt: { type: String, required: true },
-  createLink: { type: String, default: null },
+  // Quem criou a prévia vai para o cadastro já preenchido; quem só recebeu o link, para o início.
+  createTo: { type: [String, Object], default: '/' },
 })
 
 // Data fixa (e não "faltam X horas") para o servidor e o navegador mostrarem o mesmo texto.
@@ -28,11 +29,7 @@ const until = computed(() =>
         <strong>Prévia</strong>
         <span>Loja não verificada. Vale até {{ until }}.</span>
       </p>
-      <a v-if="createLink" class="btn btn--primary" :href="createLink" target="_blank" rel="noopener">
-        <AppIcon name="chat" />
-        Criar minha loja
-      </a>
-      <NuxtLink v-else class="btn btn--primary" to="/">Criar minha loja</NuxtLink>
+      <NuxtLink class="btn btn--primary" :to="createTo">Criar minha loja</NuxtLink>
     </div>
   </aside>
 </template>

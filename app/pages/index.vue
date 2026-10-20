@@ -5,7 +5,9 @@ const { data: demo } = await useFetch('/api/demo')
 const { data: config } = await usePublicConfig()
 
 const owner = computed(() => config.value?.ownerWhatsapp || null)
-const createLink = computed(() => (owner.value ? createStoreLink(owner.value) : null))
+// Conta aberta neste navegador: o topo leva ao painel em vez de "Entrar".
+const accountCookie = useCookie('vitrine_conta')
+const signedIn = computed(() => Boolean(accountCookie.value))
 const askLink = computed(() =>
   owner.value
     ? `https://wa.me/${owner.value}?text=${encodeURIComponent('Olá! Tenho uma dúvida sobre a Vitrine.')}`
@@ -17,15 +19,7 @@ const plans = computed(() => config.value?.plans ?? {})
 const founders = computed(() => config.value?.founders ?? {})
 const hasPlans = computed(() => plans.value.monthly && plans.value.quarterly)
 
-// "R$ 49" quando é inteiro, "R$ 39,20" quando tem centavos.
-function money(value) {
-  const rounded = Math.round(value * 100) / 100
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: Number.isInteger(rounded) ? 0 : 2,
-  }).format(rounded)
-}
+const money = formatPlanPrice
 const founderPrice = (value) => money(value * (1 - founders.value.discount))
 
 // ---- O que a loja mostra: duas skins da demo, uma com stickers e outra com trava de troca.
@@ -63,10 +57,13 @@ useSeoMeta({
   <div class="home">
     <header class="wrap top">
       <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
-      <a v-if="createLink" class="btn" :href="createLink" target="_blank" rel="noopener">
-        <AppIcon name="chat" />
-        Criar minha loja
-      </a>
+      <nav class="top-actions" aria-label="Conta">
+        <NuxtLink v-if="signedIn" to="/painel" class="btn">Painel</NuxtLink>
+        <template v-else>
+          <NuxtLink to="/entrar" class="top-link">Entrar</NuxtLink>
+          <NuxtLink to="/cadastro" class="btn">Criar minha loja</NuxtLink>
+        </template>
+      </nav>
     </header>
 
     <main>
@@ -215,10 +212,7 @@ useSeoMeta({
           </p>
 
           <div class="pricing-actions">
-            <a v-if="createLink" class="btn btn--primary btn--large" :href="createLink" target="_blank" rel="noopener">
-              <AppIcon name="chat" />
-              Criar minha loja
-            </a>
+            <NuxtLink to="/cadastro" class="btn btn--primary btn--large">Criar minha loja</NuxtLink>
             <NuxtLink to="/previa" class="btn btn--large">Ver como fica minha loja</NuxtLink>
           </div>
         </div>
@@ -287,7 +281,7 @@ useSeoMeta({
               <AppIcon name="chat" />
               Chamar no WhatsApp
             </a>
-            <NuxtLink to="/loja/demo" class="btn">Abrir a loja de exemplo</NuxtLink>
+            <NuxtLink to="/demo" class="btn">Abrir a loja de exemplo</NuxtLink>
           </div>
         </div>
       </section>
@@ -302,6 +296,21 @@ useSeoMeta({
   justify-content: space-between;
   gap: 1rem;
   padding-top: 1rem;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.top-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 0.75rem;
+  font-weight: 560;
+  text-underline-offset: 3px;
 }
 
 /* ---- Abertura */

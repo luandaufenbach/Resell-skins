@@ -3,7 +3,7 @@
     <AppIcon name="lock" />
     <div>
       <p class="trust-title">Não pedimos login da Steam. Usamos só o seu inventário público.</p>
-      <p class="trust-body">Nenhum campo aqui pede senha, código do Steam Guard ou chave de API.</p>
+      <p class="trust-body">Nenhum campo pede a senha da Steam, código do Steam Guard ou chave de API.</p>
     </div>
   </div>
 </template>

@@ -8,7 +8,7 @@ const props = defineProps({
   // Na demonstração da página inicial e na prévia, a skin não tem link para compartilhar.
   copyLink: { type: Boolean, default: true },
 })
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'whatsapp'])
 
 const dialog = ref(null)
 const { copied, copy } = useCopy()
@@ -152,6 +152,7 @@ const pageUrl = () => origin + route.fullPath
             :href="whatsappLink(whatsapp, item, pageUrl())"
             target="_blank"
             rel="noopener"
+            @click="emit('whatsapp')"
           >
             <AppIcon name="chat" />
             Pedir no WhatsApp

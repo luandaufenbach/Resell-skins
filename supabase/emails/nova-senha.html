@@ -1,0 +1,21 @@
+<!--
+  Modelo do e-mail de nova senha.
+  Supabase > Authentication > Emails > Templates > Reset password.
+  Assunto: Crie uma senha nova na Vitrine
+  O link usa o Site URL (Authentication > URL Configuration) e abre /nova-senha.
+-->
+<div style="font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5; color: #1d232c; max-width: 480px">
+  <p style="font-size: 22px; font-weight: bold; margin: 0 0 16px">Vitrine</p>
+  <p style="margin: 0 0 16px">Recebemos um pedido para criar uma senha nova para a sua conta.</p>
+  <p style="margin: 0 0 24px">
+    <a
+      href="{{ .SiteURL }}/nova-senha?token_hash={{ .TokenHash }}"
+      style="display: inline-block; padding: 12px 20px; background: #1d232c; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold"
+      >Criar senha nova</a
+    >
+  </p>
+  <p style="margin: 0 0 16px; color: #566173; font-size: 14px">O link vale uma vez só e por pouco tempo.</p>
+  <p style="margin: 0; color: #566173; font-size: 14px">
+    Se não foi você, ignore este e-mail: a sua senha continua a mesma.
+  </p>
+</div>

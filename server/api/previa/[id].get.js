@@ -1,5 +1,5 @@
 // GET /api/previa/:id
-// Resposta: a loja com preços (cache de 10 min, como getPricedStore) mais
+// Resposta: a loja com preços (a cópia do inventário guardada na prévia, cache de 10 min) mais
 // { whatsapp, owner, expiresAt }. O WhatsApp só vem para quem criou a prévia (cookie dela);
 // para os outros vem vazio e `owner` é falso.
 // Prévia vencida: 410 (EXPIRED). Inexistente ou já apagada: 404 (PREVIEW_NOT_FOUND).
@@ -25,6 +25,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const owner = getCookie(event, previewCookie(id)) === '1'
-  const store = await getPricedStore(preview.steamid)
+  const store = await getPreviewStore(id, preview.steamid)
   return { ...store, whatsapp: owner ? preview.whatsapp : '', owner, expiresAt: preview.expiresAt }
 })

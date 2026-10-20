@@ -36,8 +36,38 @@ export function rateLimit(event, name, max, seconds) {
   event.context.clientIp = ip
   event.context.rateLimited = [...(event.context.rateLimited ?? []), name]
 
+  count(event, `${name}|${seconds}|${ipKey(ip)}`, max, seconds)
+}
+
+/**
+ * Limite por outra chave que não o IP (e-mail no login, conta no painel). Conta em toda chamada,
+ * inclusive nas internas.
+ */
+export function rateLimitKey(event, name, key, max, seconds) {
+  count(event, `${name}|${seconds}|k:${key}`, max, seconds)
+}
+
+/**
+ * 429 se a chave já chegou a `max` na janela, sem contar esta chamada. Junto com rateLimitKey
+ * depois de uma falha, conta só as falhas (o login certo não gasta tentativa).
+ */
+export function assertBelowLimit(event, name, key, max, seconds) {
+  const bucket = buckets.get(`${name}|${seconds}|k:${key}`)
   const now = Date.now()
-  const key = `${name}|${seconds}|${ipKey(ip)}`
+  if (bucket && bucket.reset > now && bucket.count >= max) {
+    setResponseHeader(event, 'Retry-After', Math.ceil((bucket.reset - now) / 1000))
+    throw createError({ statusCode: 429, statusMessage: 'Muitas consultas seguidas', data: { code: 'LIMIT' } })
+  }
+}
+
+/** Identificador do visitante para contar eventos uma vez só: o IP (bloco /64 no IPv6). */
+export function visitorKey(event) {
+  const ip = event.node.req.__unenv__?.clientIp ?? event.context.clientIp ?? clientIp(event)
+  return ip ? ipKey(ip) : null
+}
+
+function count(event, key, max, seconds) {
+  const now = Date.now()
   let bucket = buckets.get(key)
   if (!bucket || bucket.reset <= now) {
     if (buckets.size >= MAX_BUCKETS) prune(now)

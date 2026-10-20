@@ -59,6 +59,16 @@ export function formatBRL(value) {
   return brl.format(value)
 }
 
+/** Valor de plano: "R$ 49" quando é inteiro, "R$ 39,20" quando tem centavos. */
+export function formatPlanPrice(value) {
+  const rounded = Math.round(value * 100) / 100
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: Number.isInteger(rounded) ? 0 : 2,
+  }).format(rounded)
+}
+
 /** % de economia do preço do revendedor sobre o preço Steam; null quando não há economia. */
 export function savingsPercent(price) {
   if (!price?.steam || price.seller >= price.steam) return null
@@ -99,15 +109,27 @@ export function whatsappLink(phone, item, pageUrl) {
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
 }
 
-/** Botão "Criar minha loja": abre o WhatsApp do dono, com o link da prévia quando houver. */
-export function createStoreLink(ownerPhone, previewUrl) {
-  const text = `Olá! Quero criar minha loja na Vitrine.${previewUrl ? `\nMinha prévia: ${previewUrl}` : ''}`
-  return `https://wa.me/${ownerPhone}?text=${encodeURIComponent(text)}`
+/** Páginas que mostram uma loja (e aceitam ?cor e ?fundo): a demo, as prévias e /<slug>. */
+export function isStorePath(path) {
+  const [first, second, ...rest] = path.split('/').filter(Boolean)
+  if (first === 'previa') return Boolean(second) && !rest.length
+  return Boolean(first) && !second && (first === 'demo' || !slugProblem(first))
 }
 
-/** Páginas que mostram uma loja (e aceitam ?cor e ?fundo): a demo e as prévias. */
-export function isStorePath(path) {
-  return path.startsWith('/loja/') || /^\/previa\/[^/]+/.test(path)
+/**
+ * Conta visita, skin aberta e clique no WhatsApp numa loja. sendBeacon não atrasa a navegação
+ * (o clique no WhatsApp sai da página) e não espera resposta.
+ */
+export function sendStoreEvent(slug, tipo, item = null) {
+  const body = JSON.stringify({ loja: slug, tipo, item })
+  try {
+    if (navigator.sendBeacon?.('/api/eventos', new Blob([body], { type: 'application/json' }))) return
+  } catch {
+    // Alguns navegadores recusam o Blob com tipo; cai no fetch abaixo.
+  }
+  fetch('/api/eventos', { method: 'POST', body, headers: { 'content-type': 'application/json' }, keepalive: true }).catch(
+    () => {},
+  )
 }
 
 export function searchText(item) {
@@ -177,6 +199,21 @@ export function errorMessage(error) {
       return {
         title: 'Não deu para abrir agora',
         body: 'Tente de novo em alguns minutos.',
+      }
+    case 'CAPTCHA':
+      return {
+        title: 'A verificação de segurança falhou',
+        body: 'Espere a caixa de verificação ficar marcada e envie de novo.',
+      }
+    case 'STORE_NOT_FOUND':
+      return {
+        title: 'Loja não encontrada',
+        body: 'Confira o endereço. Se você recebeu este link de alguém, peça o link de novo.',
+      }
+    case 'STORE_UNAVAILABLE':
+      return {
+        title: 'Loja indisponível',
+        body: 'Esta loja não está no ar agora. Fale com o dono da loja.',
       }
     default:
       return {

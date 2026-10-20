@@ -2,6 +2,8 @@
 // Formulário da prévia: link da Steam e WhatsApp. Gera /previa/<id>, que vale 24h.
 const steamUrl = ref('')
 const phone = ref('')
+const token = ref('')
+const turnstile = ref(null)
 const pending = ref(false)
 const problem = ref(null)
 // Campo com problema ('url' ou 'phone'), marcado para leitor de tela e com a borda de alerta.
@@ -25,16 +27,22 @@ async function generate() {
     fail({ data: { code: 'INVALID_PHONE' } })
     return
   }
+  if (!token.value) {
+    fail({ data: { code: 'CAPTCHA' } })
+    return
+  }
 
   pending.value = true
   try {
     const { id } = await $fetch('/api/previa', {
       method: 'POST',
-      body: { url: steamUrl.value, whatsapp: normalizePhone(phone.value) },
+      body: { url: steamUrl.value, whatsapp: normalizePhone(phone.value), turnstile: token.value },
     })
     await navigateTo(`/previa/${id}`)
   } catch (error) {
     fail(error)
+    // O token vale uma vez só.
+    turnstile.value?.reset()
   } finally {
     pending.value = false
   }
@@ -109,10 +117,9 @@ useSeoMeta({
             </span>
           </label>
 
-          <div v-if="problem" id="erro-previa" class="form-problem" role="alert">
-            <p class="form-problem-title">{{ problem.title }}</p>
-            <p>{{ problem.body }}</p>
-          </div>
+          <TurnstileWidget ref="turnstile" v-model="token" />
+
+          <FormProblem v-if="problem" id="erro-previa" :problem="problem" />
 
           <button class="btn btn--primary btn--large" type="submit" :disabled="pending">
             {{ pending ? 'Lendo inventário…' : 'Ver minha loja' }}
@@ -129,10 +136,10 @@ useSeoMeta({
         <h2 id="amostra" class="sample-title">Assim aparece cada skin na sua loja</h2>
         <ul class="sample-grid">
           <li v-for="item in sample" :key="item.id">
-            <SkinCard :item="item" :to="{ path: '/loja/demo', query: { i: item.id } }" />
+            <SkinCard :item="item" :to="{ path: '/demo', query: { i: item.id } }" />
           </li>
         </ul>
-        <NuxtLink to="/loja/demo" class="sample-link">Abrir a loja de exemplo</NuxtLink>
+        <NuxtLink to="/demo" class="sample-link">Abrir a loja de exemplo</NuxtLink>
       </section>
     </div>
   </main>
@@ -190,20 +197,6 @@ useSeoMeta({
 .generate .btn {
   justify-self: start;
   margin-top: 0.25rem;
-}
-
-.form-problem {
-  padding: 0.875rem 1rem;
-  border-left: 3px solid var(--alert);
-  background: var(--surface);
-  font-size: var(--step--1);
-}
-
-.form-problem-title {
-  margin-bottom: 0.25rem;
-  color: var(--alert);
-  font-size: var(--step-0);
-  font-weight: 600;
 }
 
 .privacy {

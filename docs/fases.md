@@ -131,15 +131,21 @@ Contas (guia passado ao dono em 19/10/2026; as chaves nunca vão para o chat):
   basta para testar. Com o domínio, verificar no Resend e trocar o remetente.
 - Chave publishable do Supabase: passa a se chamar `NUXT_SUPABASE_PUBLISHABLE_KEY` (no `.env` e na
   Render, salva com "Save only"), para não ir para o navegador.
+- Supabase, para os links dos e-mails: Authentication > URL Configuration > Site URL
+  `https://vitrine-6ov4.onrender.com` (depois, o domínio próprio). Os modelos de
+  `supabase/emails/` vão em Authentication > Emails > Templates (Confirm signup e Reset password),
+  com o assunto escrito no topo de cada arquivo. Os links sempre abrem o site publicado, mesmo
+  quando o cadastro foi feito no computador do dono.
 - Pendentes com o dono: colar o link de `/` no WhatsApp e escolher o nome do domínio.
 
-Plano proposto em 19/10/2026 (aguarda a aprovação do dono antes de escrever código):
+Plano aprovado pelo dono em 19/10/2026:
 
 - Telas: `/cadastro`, `/entrar`, esqueci a senha, nova senha, confirmação do e-mail e um `/painel`
   mínimo (situação da loja, verificação, atualizar inventário, sair). O painel completo é da fase 5.
-- Cadastro: link da Steam, WhatsApp, endereço da loja (slug), e-mail, senha (mínimo 8) e Turnstile.
-  Vindo da prévia, Steam e WhatsApp já vêm preenchidos. A loja só é criada depois que o e-mail é
-  confirmado.
+- Cadastro: link da Steam, WhatsApp, endereço da loja (slug), e-mail e Turnstile. Vindo da prévia,
+  Steam e WhatsApp já vêm preenchidos. A senha (mínimo 8) é criada no link do e-mail, e a loja no
+  painel, depois de conferir os dados (mudado na revisão de segurança: o Supabase guarda a senha e
+  os dados do primeiro cadastro de um e-mail não confirmado, que pode ser de outra pessoa).
 - Tudo passa pelo nosso servidor: sessão em cookie httpOnly, limite de login por IP e por e-mail,
   mensagens que não revelam se o e-mail já tem conta. O navegador não recebe chave do Supabase.
 - E-mails de conta em português, com os modelos guardados no repositório; o dono cola no Supabase.
@@ -154,7 +160,7 @@ Plano proposto em 19/10/2026 (aguarda a aprovação do dono antes de escrever c�
 - "Criar minha loja" (prévia e página inicial) leva ao cadastro. A demo vai para `/demo`, e
   `/loja/demo` redireciona.
 
-Decisões propostas (recomendação, aguardam o dono):
+Decisões (o dono mandou seguir com a recomendação em 19/10/2026):
 
 1. A prévia guarda uma cópia do inventário no banco por 24h, em vez de reler a Steam a cada 10
    minutos: na Render grátis o servidor dorme e perde o cache. A cópia é apagada junto com a prévia.
@@ -166,30 +172,37 @@ Decisões propostas (recomendação, aguardam o dono):
    no `/admin` vem na fase 6, com o resto da administração.
 4. Intervalo mínimo de 10 minutos entre duas atualizações do inventário.
 
-- [ ] Cadastro com verificação de e-mail, recuperação de senha e Turnstile.
-- [ ] Limite de tentativas no login.
-- [ ] Turnstile também na geração de prévia (`POST /api/previa`), como pede o CLAUDE.md.
+- [x] Cadastro com verificação de e-mail, recuperação de senha e Turnstile. Testado com contas
+      `@vitrine.test` criadas pela API de admin; falta o dono testar um cadastro de verdade com os
+      e-mails saindo pelo Resend (modelos em `supabase/emails/`, Site URL no Supabase).
+- [x] Limite de tentativas no login (10 por IP e 5 por e-mail a cada 15 minutos).
+- [x] Turnstile também na geração de prévia (`POST /api/previa`), como pede o CLAUDE.md.
 - [x] Na Render: preencher `NUXT_PUBLIC_SITE_URL` com o endereço do site e testar o limite com um
       `true-client-ip` falsificado (o `render.yaml` já usa esse cabeçalho, que a Cloudflare na
       frente da Render troca pelo IP real). O limite conta na memória: manter uma instância só.
 - [x] Gerar uma prévia pelo site publicado: a Steam às vezes bloqueia IPs de datacenter. Em 18/10
       a prévia de um inventário de 625 itens saiu em 2,4 s pela Render.
 - [ ] Domínio próprio (.com.br) comprado e ligado à Render antes do primeiro revendedor.
-- [ ] Cache em memória sem teto: cada inventário lido fica guardado até o servidor reiniciar.
-      Limitar o tamanho (driver lru-cache do unstorage) ou usar armazenamento externo, conforme a
-      hospedagem. Com isso, decidir também se a prévia guarda uma cópia da loja por 24h em vez de
-      reler a Steam a cada 10 minutos.
+- [x] Cache em memória com teto: driver lru-cache, 64 MB (só em produção; em desenvolvimento o
+      Nitro guarda o cache em `.nuxt/cache`). A prévia guarda uma cópia do inventário por 24h.
 - [ ] Com o site no ar, colar o link de `/` no WhatsApp e conferir imagem e título (fase 3).
-- [ ] Tabelas com RLS: lojas, itens, sincronizações, movimentações do inventário, eventos,
-      pagamentos.
-- [ ] Verificação de posse pelo código no perfil Steam; verificação manual pelo admin.
-- [ ] Lojas em `dominio.com/<slug>`, respeitando os nomes reservados. A demo passa a ser `/demo`.
-- [ ] O botão "Criar minha loja" da prévia leva ao cadastro já preenchido com a Steam e o WhatsApp.
-- [ ] Teste de 7 dias (um por SteamID, por e-mail e por WhatsApp), bloqueio automático no
+- [x] Tabelas com RLS: lojas, itens, sincronizações, movimentações do inventário, eventos,
+      pagamentos e testes grátis usados. Testado: uma conta não lê nem altera a loja de outra.
+- [x] Verificação de posse pelo código no perfil Steam; verificação manual pelo admin com
+      `select public.verificar_loja('<slug>');` no SQL Editor.
+- [x] Lojas em `dominio.com/<slug>`, respeitando os nomes reservados. A demo passa a ser `/demo`.
+- [x] O botão "Criar minha loja" da prévia leva ao cadastro já preenchido com a Steam e o WhatsApp.
+- [x] Teste de 7 dias (um por SteamID, por e-mail e por WhatsApp), bloqueio automático no
       vencimento, página "loja indisponível".
-- [ ] Atualização manual do inventário com intervalo mínimo, gravando entradas e saídas.
-- [ ] Gravar eventos (visita na loja, visita no item, clique no WhatsApp), ainda sem telas.
-- [ ] Rodar o security-reviewer.
+- [x] Atualização manual do inventário com intervalo mínimo, gravando entradas e saídas.
+- [x] Gravar eventos (visita na loja, visita no item, clique no WhatsApp), ainda sem telas.
+- [x] Rodar o security-reviewer (e o design-reviewer, pelas telas novas). Corrigidos: senha criada
+      na confirmação e dados conferidos no painel, limite de tentativas em "Atualizar inventário",
+      eventos só de itens da loja e com teto por visitante, login contando só as falhas por e-mail,
+      pagamentos fora do alcance do revendedor, e-mail confirmado exigido no servidor, limpeza de
+      cadastros e lojas não verificadas após 7 dias, endereços parecidos com "steam". Do design:
+      aviso de confiança contradizia o campo de senha, erro longe do campo no celular, conta aberta
+      sem atalho para o painel, textos e detalhes de toque. O que ficou para depois está em "Depois".
 
 **Pronto quando:**
 
@@ -270,3 +283,14 @@ Ideias que surgirem durante as fases e ficaram fora do escopo.
   vermelho do erro.
 - Páginas de termos e de privacidade (LGPD) antes do primeiro revendedor: o cadastro guarda e-mail,
   WhatsApp e SteamID.
+- Revisão de segurança da fase 4, aceitos por enquanto:
+  - O WhatsApp entra na trava de "um teste grátis" sem ser verificado: alguém pode gastar o teste do
+    número de outra pessoa (ou fugir da trava trocando o número). Decidir se o WhatsApp só sinaliza
+    para o admin em vez de negar o teste.
+  - Quem errar 5 senhas num e-mail trava o login dele por 15 minutos. Trocar o bloqueio por
+    Turnstile depois do limite.
+  - Os limites por IP da Auth do Supabase valem para o site inteiro (todas as chamadas saem do
+    servidor): subir os limites no painel do Supabase e registrar os valores aqui.
+  - Eventos gravam uma linha cada; com muito tráfego, agregar por dia.
+- Painel: com a loja fora do ar, o botão de contato depende do WhatsApp do dono na configuração;
+  sem ele, a tela não tem saída. Mostrar a chave Pix e o valor (fase 5) resolve.
