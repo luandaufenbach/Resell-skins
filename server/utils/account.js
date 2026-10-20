@@ -37,6 +37,11 @@ export function authError(error) {
   }
   if (code === 'weak_password') return invalid('WEAK_PASSWORD')
   if (code === 'email_address_invalid' || code === 'validation_failed') return invalid('INVALID_EMAIL')
-  console.error('[conta] erro da Auth:', status, code ?? error?.message)
+  console.error('[conta] erro da Auth:', status, code ?? error?.message, error?.data?.msg ?? '')
+  // O SMTP recusou o envio (endereço inexistente, ou o Resend sem domínio só entrega para o dono
+  // da conta). A Auth desfaz o cadastro.
+  if (/sending/i.test(error?.data?.msg ?? '') || code === 'email_address_not_authorized') {
+    return createError({ statusCode: 502, statusMessage: 'E-mail não enviado', data: { code: 'EMAIL_FAILED' } })
+  }
   return createError({ statusCode: 503, statusMessage: 'Conta indisponível', data: { code: 'UNAVAILABLE' } })
 }

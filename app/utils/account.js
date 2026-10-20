@@ -39,6 +39,11 @@ const MESSAGES = {
     body: 'Os links do e-mail valem uma vez só e por pouco tempo. Peça outro.',
   },
   LIMIT: { title: 'Muitas tentativas seguidas', body: 'Espere alguns minutos e tente de novo.' },
+  EMAIL_FAILED: {
+    field: 'email',
+    title: 'Não conseguimos mandar o e-mail',
+    body: 'Confira se o endereço está certo. Se estiver, tente de novo em alguns minutos.',
+  },
   UNAVAILABLE: { title: 'Não deu para concluir agora', body: 'Tente de novo em alguns minutos.' },
   CODE_NOT_FOUND: {
     title: 'O código ainda não aparece no seu perfil',
