@@ -32,7 +32,8 @@ depois http://localhost:3000. No app do Claude, o servidor sobe pela configuraç
 `.claude/launch.json`.
 Hoje existem `/` (página inicial), `/previa` (formulário), `/previa/<id>` (prévia de 24h), `/demo`
 (catálogo de exemplo, sem consultar a Steam), as telas de conta (`/cadastro`, `/entrar`,
-`/esqueci-senha`, `/nova-senha`, `/confirmar`), o `/painel` mínimo e as lojas em `/<slug>`. A
+`/esqueci-senha`, `/nova-senha`, `/confirmar`), o `/painel` (abas Loja, Marca, Itens e Preços) e as
+lojas em `/<slug>`. A
 estrutura de pastas está no README.
 Para testar contas sem mandar e-mail, crie a conta pela API de admin do Supabase (`generate_link`)
 com e-mail `@vitrine.test` e abra `/confirmar?token_hash=...`. No fim, apague as contas de teste e

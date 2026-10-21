@@ -26,17 +26,19 @@ export const getPricedStore = defineCachedFunction(
 
 /**
  * Acrescenta `price` aos itens: { steam, estimated, seller } ou null (sem preço Steam).
- * `pricesOk` falso indica que o banco falhou; quem guarda em cache não deve guardar esse resultado.
+ * `rules` ({ discount, rounding }) vem da loja; sem ele, vale o desconto padrão da configuração,
+ * sem arredondar (prévia e demo). `pricesOk` falso indica que o banco falhou; quem guarda em
+ * cache não deve guardar esse resultado.
  */
-export async function attachPrices(items) {
+export async function attachPrices(items, rules = null) {
   const names = [...new Set(items.map((item) => item.marketName))]
   if (!names.length) return { items, pricesOk: true }
 
   try {
     const batches = []
     for (let i = 0; i < names.length; i += LOTE) batches.push(names.slice(i, i + LOTE))
-    const [discount, ...results] = await Promise.all([
-      defaultDiscount(),
+    const [{ discount, rounding }, ...results] = await Promise.all([
+      rules ?? defaultRules(),
       ...batches.map((nomes) => supabase('/rest/v1/rpc/precos_por_nome', { method: 'POST', body: { nomes } })),
     ])
     const byName = new Map(results.flat().map((r) => [r.market_hash_name, r]))
@@ -45,10 +47,7 @@ export async function attachPrices(items) {
       const row = byName.get(item.marketName)
       if (!row) return { ...item, price: null }
       const steam = Number(row.preco_steam_brl)
-      return {
-        ...item,
-        price: { steam, estimated: row.estimado, seller: Math.round(steam * (1 - discount) * 100) / 100 },
-      }
+      return { ...item, price: { steam, estimated: row.estimado, seller: sellerPrice(steam, discount, rounding) } }
     })
     return { items: priced, pricesOk: true }
   } catch (error) {
@@ -57,8 +56,8 @@ export async function attachPrices(items) {
   }
 }
 
-// Desconto padrão da loja sobre o preço Steam (0.30 = 30%), da tabela de configuração.
-async function defaultDiscount() {
+// Desconto padrão sobre o preço Steam (0.30 = 30%), da tabela de configuração.
+async function defaultRules() {
   const { desconto_padrao: value } = await readConfig(['desconto_padrao'])
-  return value >= 0 && value < 1 ? value : 0.3
+  return { discount: value >= 0 && value < 1 ? value : DEFAULT_DISCOUNT, rounding: 'centavos' }
 }

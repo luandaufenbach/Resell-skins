@@ -47,10 +47,11 @@ const rarityStyle = computed(() =>
 
 const lockLabel = computed(() => (props.item ? tradeLockLabel(props.item) : null))
 
-// Enquanto não há painel, o preço do revendedor é sempre o de exemplo (Steam menos o desconto padrão).
+// Explica o preço: a economia sobre a Steam e se o valor da Steam é estimado.
 const priceNote = computed(() => {
   if (!props.item) return null
   const price = props.item.price
+  if (props.item.ask) return 'Chame no WhatsApp para saber o preço.'
   if (!price) return 'Este item não tem preço de referência na Steam.'
   const savings = savingsPercent(price)
   const note = savings ? `${savings}% abaixo do preço da Steam.` : null
@@ -101,7 +102,11 @@ const pageUrl = () => origin + route.fullPath
         </p>
         <h2 class="sheet-title display">{{ itemTitle(item) }}</h2>
 
-        <div v-if="'price' in item" class="sheet-price">
+        <p v-if="item.status" class="sheet-status" :class="`is-${item.status}`">
+          {{ item.status === 'vendido' ? 'Este item já foi vendido.' : 'Este item está reservado.' }}
+        </p>
+
+        <div v-if="'price' in item && item.status !== 'vendido'" class="sheet-price">
           <ItemPrice :price="item.price" large />
           <p v-if="priceNote" class="price-note">{{ priceNote }}</p>
         </div>
@@ -147,7 +152,7 @@ const pageUrl = () => origin + route.fullPath
 
         <div class="sheet-actions">
           <a
-            v-if="whatsapp || demo"
+            v-if="(whatsapp || demo) && item.status !== 'vendido'"
             class="btn btn--primary"
             :href="whatsappLink(whatsapp, item, pageUrl())"
             target="_blank"
@@ -277,6 +282,23 @@ const pageUrl = () => origin + route.fullPath
 
 .sheet-title {
   font-size: clamp(2.25rem, 8vw, 3.25rem);
+}
+
+/* Reservado e vendido: a mesma etiqueta do card, em linha. */
+.sheet-status {
+  justify-self: start;
+  margin-top: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-s);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--step--1);
+  font-weight: 640;
+}
+
+.sheet-status.is-vendido {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .sheet-price {

@@ -25,11 +25,12 @@ const items = computed(() => props.store.items ?? [])
 const profile = computed(() => props.store.profile ?? null)
 const storeName = computed(() => profile.value?.name ?? 'Catálogo de skins')
 
-// ---- Tema pela URL (?cor=ff5500&fundo=claro). Quando houver painel, vem da configuração da loja.
+// ---- Tema: a loja do revendedor usa a cor e o fundo escolhidos no painel; a demo e a prévia
+// aceitam ?cor=ff5500&fundo=claro na URL.
 const { options: themeOptions } = useTheme()
-const themeFromUrl = () => ({ cor: route.query.cor, fundo: route.query.fundo })
-themeOptions.value = themeFromUrl()
-watch(() => [route.query.cor, route.query.fundo], () => (themeOptions.value = themeFromUrl()))
+const pickTheme = () => props.store.brand?.theme ?? { cor: route.query.cor, fundo: route.query.fundo }
+themeOptions.value = pickTheme()
+watch(() => [props.store.brand?.theme, route.query.cor, route.query.fundo], () => (themeOptions.value = pickTheme()))
 // A página seguinte monta antes de esta sair: só volta ao padrão se ela não for outra loja.
 onBeforeUnmount(() => {
   if (!isStorePath(router.currentRoute.value.path)) themeOptions.value = {}
@@ -41,7 +42,8 @@ const totals = computed(() => {
   let tradable = 0
   for (const item of items.value) {
     units += item.quantity
-    if (isTradableNow(item)) tradable += item.quantity
+    // Vendido continua na loja até sair do inventário, mas não está disponível.
+    if (isTradableNow(item) && item.status !== 'vendido') tradable += item.quantity
   }
   return { units, tradable }
 })
@@ -54,10 +56,14 @@ const summary = computed(() => {
   return `${itens} no inventário, ${tradable} disponíveis para troca agora.`
 })
 
-// Sem painel ainda: todo preço é o de exemplo, calculado com o desconto padrão sobre a Steam.
+// Desconto padrão da loja sobre a Steam (na demo e na prévia, o da configuração). Alguns itens
+// podem ter preço manual: a frase fala do padrão.
 const priceNote = computed(() => {
-  const savings = savingsPercent(items.value.find((item) => item.price)?.price)
-  return savings ? `Preços ${savings}% abaixo da Steam.` : ''
+  const percent =
+    props.store.discount != null
+      ? Math.round(props.store.discount * 100)
+      : savingsPercent(items.value.find((item) => item.price)?.price)
+  return percent > 0 ? `Preços ${percent}% abaixo da Steam.` : ''
 })
 
 // ---- Filtros. Categoria e arma ficam na URL para o revendedor poder compartilhar "só Karambits".
@@ -253,23 +259,17 @@ if (!props.preview) useSeoMeta({
 
 <template>
   <div class="store">
-    <header class="wrap store-head">
-      <div class="owner">
-        <img v-if="profile?.avatar" class="avatar" :src="profile.avatar" alt="" width="40" height="40" />
-        <span v-else class="avatar avatar--blank" aria-hidden="true">{{ storeName.charAt(0) }}</span>
-        <a v-if="profile?.url" :href="profile.url" target="_blank" rel="noopener" class="owner-link">
-          Perfil na Steam
-        </a>
-        <span v-if="store.demo" class="owner-note">Catálogo de exemplo com dados fictícios</span>
-      </div>
-
-      <h1 class="display store-name">{{ storeName }}</h1>
-      <p class="store-summary">
-        {{ summary }}
-        <template v-if="priceNote">{{ priceNote }}</template>
-      </p>
-
-      <div v-if="showWhatsapp || !preview" class="store-actions">
+    <StoreHeader
+      :name="storeName"
+      :avatar="profile?.avatar"
+      :profile-url="profile?.url"
+      :brand="store.brand"
+      :summary="[summary, priceNote].filter(Boolean).join(' ')"
+    >
+      <template v-if="store.demo" #note>
+        <span class="owner-note">Catálogo de exemplo com dados fictícios</span>
+      </template>
+      <template v-if="showWhatsapp || !preview">
         <a
           v-if="showWhatsapp"
           class="btn btn--primary"
@@ -281,12 +281,19 @@ if (!props.preview) useSeoMeta({
           <AppIcon name="chat" />
           Chamar no WhatsApp
         </a>
-        <button v-if="!preview" class="btn" type="button" @click="copyStoreLink">
+        <button
+          v-if="!preview"
+          class="btn copy-link"
+          :class="{ 'is-copied': copied }"
+          type="button"
+          :aria-label="copied ? 'Link copiado' : 'Copiar link da loja'"
+          @click="copyStoreLink"
+        >
           <AppIcon name="link" />
-          {{ copied ? 'Link copiado' : 'Copiar link da loja' }}
+          <span class="copy-text" aria-hidden="true">{{ copied ? 'Link copiado' : 'Copiar link da loja' }}</span>
         </button>
-      </div>
-    </header>
+      </template>
+    </StoreHeader>
 
     <div v-if="items.length" ref="toolbar" class="toolbar">
       <!-- A ordem no HTML segue a do computador (para o Tab); no celular o CSS reordena. -->
@@ -434,87 +441,25 @@ if (!props.preview) useSeoMeta({
   min-height: 100dvh;
 }
 
-/* ---- Cabeçalho */
-.store-head {
-  display: grid;
-  gap: 0.875rem;
-  padding-top: 1.25rem;
-  padding-bottom: 1.5rem;
-}
-
-.owner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--muted);
-  font-size: var(--step--1);
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-s);
-  object-fit: cover;
-}
-
-.avatar--blank {
-  display: grid;
-  place-items: center;
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: var(--step-1);
-  font-stretch: var(--narrow);
-  font-weight: 700;
-}
-
-.owner-link {
-  display: inline-block;
-  padding-block: 0.25rem;
-  text-underline-offset: 3px;
-}
-
-.store-name {
-  font-size: clamp(3rem, 13vw, 7.5rem);
-  overflow-wrap: anywhere;
-}
-
-.store-summary {
-  color: var(--muted);
-}
-
-.store-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-@media (min-width: 48rem) {
-  .store-head {
-    grid-template-columns: 1fr auto;
-    column-gap: 2rem;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+/* No celular estreito, "Copiar link" vira só o ícone, ao lado do WhatsApp, para o topo não crescer. */
+@container (max-width: 26rem) {
+  .copy-link {
+    width: 44px;
+    padding: 0;
   }
 
-  .owner,
-  .store-name,
-  .store-summary {
-    grid-column: 1 / -1;
+  .copy-text {
+    display: none;
   }
 
-  .store-actions {
-    grid-column: 2;
-    grid-row: 3;
-    align-self: end;
-    margin-top: 0;
+  /* Depois de copiar, o texto aparece por 2 segundos para confirmar. */
+  .copy-link.is-copied {
+    width: auto;
+    padding: 0 1.1rem;
   }
 
-  .store-summary {
-    grid-column: 1;
-    grid-row: 3;
-    align-self: end;
+  .is-copied .copy-text {
+    display: inline;
   }
 }
 

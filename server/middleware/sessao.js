@@ -6,7 +6,9 @@ export default defineEventHandler(async (event) => {
   if (event.node.req.__unenv__) return
 
   const path = event.path.split('?')[0]
-  if (event.method === 'POST' && /^\/api\/(conta|painel)(\/|$)/.test(path)) assertSameOrigin(event)
+  // Toda gravação (POST, DELETE) de conta e painel tem que vir do próprio site.
+  const writes = !['GET', 'HEAD'].includes(event.method)
+  if (writes && /^\/api\/(conta|painel)(\/|$)/.test(path)) assertSameOrigin(event)
   if (!/^\/(api\/)?painel(\/|$)/.test(path)) return
 
   // Banco fora do ar: a própria rota tenta de novo e mostra o erro.

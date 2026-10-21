@@ -33,15 +33,15 @@ export default defineEventHandler(async (event) => {
   if (!visitor) return null
 
   const store = await storeBySlug(slug).catch(() => null)
-  if (!store || !isOpen(store)) return null
+  if (!store || store.moved || !isOpen(store)) return null
 
   const now = Date.now()
   const key = `${visitor}|${store.id}|${type}|${item ?? ''}`
   if (seen.get(key) > now) return null
 
   if (item) {
-    const readAt = store.inventario_em ? Date.parse(store.inventario_em) : 0
-    const { items } = await getStoreItems(store.id, readAt).catch(() => ({ items: [] }))
+    // Mesma lista (e mesmo cache) da loja pública: item oculto não conta.
+    const { items } = await getStoreItems(store.id, storeVersion(store), storeRules(store)).catch(() => ({ items: [] }))
     if (!items.some((i) => i.id === item)) return null
   }
   // Silencioso: passar do teto só deixa de contar.

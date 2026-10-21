@@ -218,14 +218,66 @@ Decisões (o dono mandou seguir com a recomendação em 19/10/2026):
 
 ## Fase 5: painel do revendedor
 
-- [ ] Marca: nome, slug, logo, banner (recorte e ponto de foco, convertido para WebP), frase, redes
+Plano aprovado pelo dono em 20/10/2026:
+
+- `/painel` em abas: Loja (situação, verificação, inventário e aviso de vencimento), Marca, Itens e
+  Preços. Cada mudança grava na hora e aparece na loja pública (o cache da loja muda junto).
+- Marca: nome (até 40, sem "steam"/"valve"), endereço, frase (até 120), WhatsApp, redes, logo,
+  banner, cor de destaque e claro/escuro, com prévia do topo da loja no tema escolhido. A loja
+  ganha um topo novo com banner, logo, nome, frase, redes e WhatsApp.
+- Redes: Instagram, TikTok, YouTube e Discord. O revendedor digita só o usuário (ou o código do
+  convite) e o servidor monta o link: nenhum link livre na loja.
+- Uploads passam pelo servidor, que decodifica e reconverte para WebP com o `sharp` (apaga os dados
+  da foto, como a localização), recusa SVG, o que não é imagem e arquivos acima de 8 MB. Logo até
+  320×320 com transparência; banner até 1600 px de largura, com ponto de foco e prévia do recorte
+  no celular e no computador. Bucket público `marcas` no Storage, só WebP.
+- Cor de destaque: até 3 sugestões tiradas da logo, mais o seletor livre.
+- Itens: busca e filtros (todos, ocultos, preço manual, reservados, vendidos), ocultar/mostrar na
+  lista e edição com preço padrão, manual ou "sob consulta", "voltar ao padrão", custo e situação.
+  Ocultos nem saem do servidor; reservados e vendidos ganham etiqueta. O custo nunca sai na loja
+  pública e fica guardado na saída do item (base do relatório de lucro da fase 7).
+- Preços: desconto padrão de 0% a 80% (30% por padrão) e arredondamento, com exemplo de um item do
+  inventário. Prévia e demo seguem com os 30% da configuração.
+- Aviso de vencimento a partir de 5 dias antes (teste e plano pago): data, valor do plano da loja,
+  chave Pix com botão de copiar e WhatsApp do dono para o comprovante. Fica também com a loja fora
+  do ar.
+
+Decisões (o dono aprovou as recomendações em 20/10/2026):
+
+1. Trocar o endereço: o antigo redireciona para o novo por 60 dias e ninguém pode pegá-lo nesse
+   tempo (evita que alguém pegue o link de uma loja conhecida para dar golpe).
+2. Arredondamento: sem arredondar (R$ 123,47), real inteiro (R$ 123), final ,90 (R$ 122,90) ou
+   múltiplo de 5 (R$ 120), sempre para baixo, para a economia nunca ficar menor que a prometida.
+   Preço baixo demais para o arredondamento fica com os centavos.
+3. Redes: Instagram, TikTok, YouTube e Discord.
+4. Cada loja guarda plano e valor; as que existem e as novas começam no mensal com o valor da
+   configuração. Fundador e troca de plano ficam no `/admin` (fase 6). A chave Pix vai na tabela
+   `configuracao` (`pix_dono`).
+5. Dependência nova: `sharp`, para converter as imagens em WebP no servidor.
+
+- [x] Marca: nome, slug, logo, banner (recorte e ponto de foco, convertido para WebP), frase, redes
       sociais, WhatsApp, cor de destaque (sugerida a partir da logo), claro/escuro.
-- [ ] Itens: ocultar/mostrar, preço manual, custo, reservado/vendido. O preço manual não apaga o
+- [x] Itens: ocultar/mostrar, preço manual, custo, reservado/vendido. O preço manual não apaga o
       padrão (Steam menos o desconto da loja): o painel mostra os dois e tem "voltar ao padrão"
       (pedido do dono em 18/10/2026).
-- [ ] Desconto padrão e arredondamento da loja.
-- [ ] Aviso de vencimento 5 dias antes, com a chave Pix do dono e o valor do plano do revendedor.
-- [ ] Rodar o design-reviewer e o security-reviewer.
+- [x] Desconto padrão e arredondamento da loja.
+- [x] Aviso de vencimento 5 dias antes, com a chave Pix do dono e o valor do plano do revendedor.
+      A chave Pix vai em `configuracao.pix_dono` (Table Editor do Supabase); vazia, o aviso leva
+      ao WhatsApp do dono.
+- [x] Rodar o design-reviewer e o security-reviewer. Corrigidos do design: nome da skin esmagado
+      pelo preço na lista de itens, topo da loja alto demais (banner 3:1 no celular e 6:1 no
+      computador, nome menor com banner, "Copiar link" só com ícone no celular), item vendido com
+      preço e "chame no WhatsApp", foco do banner mudando ao rolar a página (agora só um toque parado
+      muda), anel de foco cortado nas abas e chips, toques menores que 44px, exemplos de preço com
+      itens de preço manual, contornos abaixo de 3:1, cor escolhida sem nome, "Salvar" fora da tela
+      na edição do item, aviso de vencimento repetido em todas as abas (agora uma linha fora da aba
+      Loja). Da segurança: teto de 32 KB no corpo de toda gravação da API (antes, alguns POSTs de
+      100 MB derrubariam o servidor), um envio de imagem por conta e dois no servidor, teto de
+      pixels menor e AVIF fora, imagens só com a loja verificada, nome e frase só com letras
+      latinas e trava de Steam/Valve com NFKC e letras soltas ("Ѕteam", "Ｓｔｅａｍ", "S.t.e.a.m"),
+      trava no banco contra a corrida na reserva do endereço antigo, reserva só para loja verificada
+      e mantida se a loja for apagada, limite também para as tentativas de trocar o endereço, chave
+      Pix só quando o aviso aparece.
 
 **Pronto quando:**
 
@@ -294,5 +346,12 @@ Ideias que surgirem durante as fases e ficaram fora do escopo.
   - Os limites por IP da Auth do Supabase valem para o site inteiro (todas as chamadas saem do
     servidor): subir os limites no painel do Supabase e registrar os valores aqui.
   - Eventos gravam uma linha cada; com muito tráfego, agregar por dia.
-- Painel: com a loja fora do ar, o botão de contato depende do WhatsApp do dono na configuração;
-  sem ele, a tela não tem saída. Mostrar a chave Pix e o valor (fase 5) resolve.
+- Revisão de segurança da fase 5, aceitos por enquanto:
+  - Trocar o WhatsApp e o endereço da loja não pede a senha de novo: quem roubar a sessão troca o
+    número em silêncio. Pedir a senha ou registrar a mudança para o admin (fase 6).
+  - Imagens de loja apagada ficam no bucket `marcas` (o SQL não apaga arquivos do Storage). A
+    exclusão da fase 7 precisa apagar `marcas/<id da loja>/` pela API do Storage.
+  - Quando uma loja for apagada (fase 7), o endereço atual dela fica livre na hora; os antigos
+    continuam reservados. Reservar também o atual ao apagar.
+  - Arquivo acima de 8 MB recebe 413 antes de ser lido, e o navegador mostra erro de rede em vez
+    da mensagem (o painel confere o tamanho antes de enviar).

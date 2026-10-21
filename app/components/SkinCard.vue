@@ -17,7 +17,11 @@ const lockLabel = computed(() => tradeLockLabel(props.item))
 </script>
 
 <template>
-  <article class="card" :style="{ '--rarity': item.rarity.color, '--rarity-text': rarityText }">
+  <article
+    class="card"
+    :class="{ 'is-sold': item.status === 'vendido' }"
+    :style="{ '--rarity': item.rarity.color, '--rarity-text': rarityText }"
+  >
     <div class="stage">
       <img
         v-if="item.image"
@@ -29,8 +33,11 @@ const lockLabel = computed(() => tradeLockLabel(props.item))
         loading="lazy"
         decoding="async"
       />
-      <div v-if="item.quantity > 1" class="badges">
-        <span class="badge">{{ item.quantity }}×</span>
+      <div v-if="item.quantity > 1 || item.status" class="badges">
+        <span v-if="item.status" class="badge badge--status">
+          {{ item.status === 'vendido' ? 'Vendido' : 'Reservado' }}
+        </span>
+        <span v-if="item.quantity > 1" class="badge">{{ item.quantity }}×</span>
       </div>
       <ul v-if="stickers.length" class="stickers">
         <li v-for="(sticker, i) in stickers" :key="i">
@@ -63,7 +70,8 @@ const lockLabel = computed(() => tradeLockLabel(props.item))
       {{ lockLabel }}
     </p>
     <!-- No pé do card: o preço fica na mesma altura em toda a linha, com ou sem desgaste e trava. -->
-    <ItemPrice v-if="'price' in item" class="card-price" :price="item.price" />
+    <p v-if="item.status === 'vendido'" class="card-price card-sold">Vendido</p>
+    <ItemPrice v-else-if="'price' in item" class="card-price" :price="item.price" />
   </article>
 </template>
 
@@ -129,6 +137,33 @@ const lockLabel = computed(() => tradeLockLabel(props.item))
   font-size: var(--step--1);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* Reservado na cor da loja; vendido apagado, para não disputar com o que está à venda. */
+.badge--status {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.is-sold .badge--status {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.is-sold .stage-img,
+.is-sold .stickers {
+  opacity: 0.45;
+}
+
+.is-sold .name,
+.is-sold .kind,
+.is-sold .card-wear {
+  opacity: 0.7;
+}
+
+.card-sold {
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .stickers {

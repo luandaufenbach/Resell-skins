@@ -1,7 +1,7 @@
 // POST /api/painel/loja  { steam, whatsapp, slug }
 // Cria a loja da conta com os dados conferidos no painel (vêm preenchidos com os do cadastro).
 // Mesmas regras do cadastro: endereço livre e não reservado, inventário público e sem loja
-// verificada. Trocar os dados de uma loja que já existe fica para o painel completo (fase 5).
+// verificada. Depois de criada, WhatsApp e endereço mudam na aba Marca do painel.
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event)
   rateLimitKey(event, 'criar-loja', session.user.id, 10, 60 * 60)

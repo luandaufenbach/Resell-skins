@@ -5,6 +5,12 @@ const route = useRoute()
 const slug = computed(() => String(route.params.slug))
 
 const { data, error, refresh, status } = await useFetch(() => `/api/loja/${slug.value}`)
+
+// Endereço antigo da loja: redireciona para o atual (vale 60 dias depois da troca).
+if (data.value?.moved) {
+  await navigateTo({ path: `/${data.value.moved}`, query: route.query }, { redirectCode: 301, replace: true })
+}
+
 const problem = computed(() => (error.value ? errorMessage(error.value) : null))
 const retry = computed(() => !['STORE_NOT_FOUND', 'STORE_UNAVAILABLE'].includes(errorCode(error.value)))
 
@@ -18,5 +24,5 @@ useSeoMeta({ robots: () => (problem.value ? 'noindex' : undefined), title: () =>
       {{ status === 'pending' ? 'Abrindo…' : 'Tentar de novo' }}
     </button>
   </StoreProblem>
-  <StoreCatalog v-else-if="data" :store="data" :whatsapp="data.whatsapp" :slug="data.slug" />
+  <StoreCatalog v-else-if="data?.items" :store="data" :whatsapp="data.whatsapp" :slug="data.slug" />
 </template>

@@ -39,6 +39,14 @@ defineProps({
     <template v-else-if="name === 'close'">
       <path d="M6 6l12 12M18 6 6 18" />
     </template>
+    <template v-else-if="name === 'eye'">
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="2.75" />
+    </template>
+    <template v-else-if="name === 'eye-off'">
+      <path d="M9.9 5.8A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.7 3.4M14.1 18.2a9.6 9.6 0 0 1-2.1.3C6 18.5 2.5 12 2.5 12a17 17 0 0 1 3-3.7" />
+      <path d="M4 4l16 16" />
+    </template>
     <template v-else-if="name === 'external'">
       <path d="M14 5h5v5M19 5l-8 8" />
       <path d="M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4" />

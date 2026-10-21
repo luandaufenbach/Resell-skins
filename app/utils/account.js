@@ -54,6 +54,56 @@ const MESSAGES = {
     title: 'O inventário foi lido há pouco',
     body: 'Dá para atualizar de novo 10 minutos depois da última leitura.',
   },
+  // ---- Painel
+  INVALID_FIELD: { title: 'Confira os dados', body: 'Algum campo veio num formato que não serve. Recarregue a página e tente de novo.' },
+  NAME_INVALID: {
+    field: 'nome',
+    title: 'Confira o nome',
+    body: 'Use até 40 caracteres, com letras, números e pontuação comum.',
+  },
+  NAME_RESERVED: {
+    field: 'nome',
+    title: 'Esse nome lembra a Steam ou a Valve',
+    body: 'Nome parecido com o da Steam lembra golpe para quem compra. Escolha outro.',
+  },
+  TAGLINE_INVALID: {
+    field: 'frase',
+    title: 'Confira a frase',
+    body: 'Use até 120 caracteres, com letras, números, pontuação comum ou emoji.',
+  },
+  TAGLINE_RESERVED: {
+    field: 'frase',
+    title: 'Não use Steam nem Valve na frase',
+    body: 'A loja já mostra sozinha a comparação com o preço da Steam. Citar a Steam na frase lembra golpe para quem compra.',
+  },
+  SOCIAL_INVALID: {
+    title: 'Confira o usuário da rede',
+    body: 'Digite só o usuário (como @minhaloja) ou cole o link do seu perfil.',
+  },
+  NOT_IMAGE: {
+    title: 'Esse arquivo não é uma imagem que dá para usar',
+    body: 'Envie um PNG, JPG, WebP ou GIF de até 20 megapixels. SVG e outros formatos não são aceitos.',
+  },
+  NOT_VERIFIED: {
+    title: 'Verifique o inventário primeiro',
+    body: 'Logo e banner ficam liberados depois da verificação, na aba Loja.',
+  },
+  UPLOAD_BUSY: { title: 'Outro envio está em andamento', body: 'Espere alguns segundos e envie de novo.' },
+  IMAGE_TOO_LARGE: { title: 'Arquivo grande demais', body: 'Envie uma imagem de até 8 MB.' },
+  LOGO_SMALL: { title: 'Logo pequena demais', body: 'Use uma imagem com pelo menos 64 px de cada lado.' },
+  BANNER_SMALL: { title: 'Banner estreito demais', body: 'Use uma imagem com pelo menos 600 px de largura.' },
+  SLUG_CHANGES: {
+    field: 'slug',
+    title: 'Trocas de endereço demais',
+    body: 'Cada endereço antigo fica reservado para a sua loja por 60 dias, e são no máximo 5. Espere um pouco ou volte para um endereço antigo.',
+  },
+  DISCOUNT_INVALID: { field: 'desconto', title: 'Confira o desconto', body: 'Use um número inteiro de 0 a 80.' },
+  PRICE_INVALID: { field: 'preco', title: 'Confira o preço', body: 'Use um valor em reais maior que zero, como 1.250,00.' },
+  COST_INVALID: { field: 'custo', title: 'Confira o custo', body: 'Use um valor em reais, como 980,50, ou deixe vazio.' },
+  ITEM_NOT_FOUND: {
+    title: 'Este item saiu do inventário',
+    body: 'Ele não está mais na loja. Recarregue a lista de itens.',
+  },
 }
 
 /** "5548999999999" -> "(48) 99999-9999". Número de fora do Brasil fica como veio. */

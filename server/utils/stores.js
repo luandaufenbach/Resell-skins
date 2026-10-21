@@ -9,8 +9,14 @@ export const REFRESH_INTERVAL = 10 * 60 * 1000
 // A API do Supabase devolve no máximo 1000 linhas por chamada.
 const LOTE = 1000
 
-// Colunas que a loja pública usa: nada de código, e-mail ou pagamento.
-const PUBLIC_COLUMNS = 'id,slug,steamid,whatsapp,nome,avatar,verificada_em,pago_ate,inventario_em'
+// Colunas que a loja pública usa: nada de código, e-mail, plano ou pagamento.
+const PUBLIC_COLUMNS = [
+  'id,slug,steamid,whatsapp,nome,avatar,verificada_em,pago_ate,inventario_em,alterada_em',
+  'nome_loja,frase,redes,logo,banner,banner_x,banner_y,cor,fundo,desconto,arredondamento',
+].join(',')
+
+// Colunas dos itens que a loja pública lê. O custo fica de fora: é só do revendedor.
+const PUBLIC_ITEM_COLUMNS = 'dados,preco,sob_consulta,situacao'
 
 /** Código de posse: "VTR-" e 4 caracteres sem os que se confundem (0/O, 1/I). */
 export function newCode() {
@@ -125,28 +131,109 @@ export function saveInventory(storeId, data) {
 /** Endereço livre e inventário sem loja verificada; senão 409 com o motivo. */
 export async function assertAvailable(slug, steamid) {
   let rows
+  let old
   try {
-    rows = await supabase('/rest/v1/lojas', {
-      query: {
-        or: `(slug.eq.${slug},and(steamid.eq.${steamid},verificada_em.not.is.null))`,
-        select: 'slug,steamid,verificada_em',
-      },
-    })
+    ;[rows, old] = await Promise.all([
+      supabase('/rest/v1/lojas', {
+        query: {
+          or: `(slug.eq.${slug},and(steamid.eq.${steamid},verificada_em.not.is.null))`,
+          select: 'slug,steamid,verificada_em',
+        },
+      }),
+      oldAddress(slug),
+    ])
   } catch (error) {
     throw unavailable('lojas', error)
   }
-  const code = rows.some((row) => row.slug === slug)
-    ? 'SLUG_TAKEN'
-    : rows.some((row) => row.steamid === steamid)
-      ? 'STEAM_TAKEN'
-      : null
-  if (code) throw createError({ statusCode: 409, statusMessage: 'Já existe', data: { code } })
+  const code =
+    old || rows.some((row) => row.slug === slug)
+      ? 'SLUG_TAKEN'
+      : rows.some((row) => row.steamid === steamid)
+        ? 'STEAM_TAKEN'
+        : null
+  if (code) throw slugTaken(code)
 }
 
-/** Loja pela URL, só com as colunas públicas. null se não existe. */
+/** Troca o endereço da loja. O antigo redireciona para o novo por 60 dias (public.trocar_endereco). */
+export async function changeSlug(storeId, slug) {
+  try {
+    await supabase('/rest/v1/rpc/trocar_endereco', { method: 'POST', body: { p_loja: storeId, p_slug: slug }, retry: 0 })
+  } catch (error) {
+    const { code } = supabaseError(error)
+    // Endereço de outra loja, atual ou antigo ainda valendo (índice único ou interno.endereco_livre).
+    if (code === '23505') throw slugTaken('SLUG_TAKEN')
+    if (code === 'P0001' && error?.data?.hint === 'SLUG_CHANGES') {
+      throw createError({ statusCode: 429, statusMessage: 'Trocas demais', data: { code: 'SLUG_CHANGES' } })
+    }
+    throw unavailable('lojas', error)
+  }
+}
+
+/**
+ * Loja pela URL, só com as colunas públicas. null se não existe; { moved } quando o endereço é
+ * antigo e ainda redireciona para o atual.
+ */
 export async function findStoreBySlug(slug) {
   const [row] = await supabase('/rest/v1/lojas', { query: { slug: `eq.${slug}`, select: PUBLIC_COLUMNS } })
-  return row ?? null
+  if (row) return row
+  const old = await oldAddress(slug)
+  return old?.current ? { moved: old.current } : null
+}
+
+// Endereço antigo ainda reservado: { current } com o endereço atual da loja que o usava (null se a
+// loja foi apagada; a reserva vale assim mesmo). null se não está reservado.
+async function oldAddress(slug) {
+  const [row] = await supabase('/rest/v1/enderecos_antigos', {
+    query: { slug: `eq.${slug}`, ate: `gt.${new Date().toISOString()}`, select: 'lojas(slug)' },
+  })
+  return row ? { current: row.lojas?.slug ?? null } : null
+}
+
+function slugTaken(code) {
+  return createError({ statusCode: 409, statusMessage: 'Já existe', data: { code } })
+}
+
+/** Grava mudanças do painel na loja e marca a hora: a loja pública sai do cache na próxima visita. */
+export async function updateStore(storeId, changes) {
+  try {
+    await supabase('/rest/v1/lojas', {
+      method: 'PATCH',
+      query: { id: `eq.${storeId}` },
+      body: { ...changes, alterada_em: new Date().toISOString() },
+      headers: { Prefer: 'return=minimal' },
+      retry: 0,
+    })
+  } catch (error) {
+    // Nome com "steam" ou outro limite do banco que o servidor não pegou antes.
+    if (supabaseError(error).code === '23514') throw invalid('INVALID_FIELD')
+    throw unavailable('lojas', error)
+  }
+}
+
+/** Desconto e arredondamento da loja, no formato de attachPrices. */
+export function storeRules(store) {
+  return {
+    discount: Number(store.desconto ?? DEFAULT_DISCOUNT),
+    rounding: isRounding(store.arredondamento) ? store.arredondamento : 'centavos',
+  }
+}
+
+/** Versão da loja para o cache: muda quando o inventário é lido e quando o painel grava algo. */
+export function storeVersion(store) {
+  return Math.max(Date.parse(store.inventario_em ?? 0) || 0, Date.parse(store.alterada_em ?? 0) || 0)
+}
+
+/** Marca da loja como a loja pública e o painel mostram. */
+export function storeBrand(store) {
+  return {
+    name: store.nome_loja ?? null,
+    tagline: store.frase ?? null,
+    logo: imageUrl(store.logo),
+    banner: imageUrl(store.banner),
+    focus: { x: store.banner_x ?? 50, y: store.banner_y ?? 50 },
+    socials: socialLinks(store.redes),
+    theme: { cor: store.cor ?? null, fundo: store.fundo ?? 'escuro' },
+  }
 }
 
 /** No ar: verificada e com o pagamento (ou o teste) em dia. */
@@ -155,20 +242,33 @@ export function isOpen(store) {
 }
 
 /**
- * Itens da loja com preço, em cache por 10 minutos. A chave leva a hora da última leitura do
- * inventário: depois de "Atualizar inventário" a loja já mostra os itens novos.
+ * Itens visíveis da loja com preço, em cache por 10 minutos. A chave leva a versão da loja
+ * (storeVersion): depois de "Atualizar inventário" ou de uma mudança no painel, a loja já mostra
+ * o que mudou. `rules` é o desconto e o arredondamento da loja (storeRules).
  */
 export const getStoreItems = defineCachedFunction(
-  async (storeId) => {
+  async (storeId, version, rules) => {
     const rows = []
     for (let offset = 0; ; offset += LOTE) {
       const page = await supabase('/rest/v1/itens', {
-        query: { loja_id: `eq.${storeId}`, select: 'dados', order: 'assetid', limit: LOTE, offset },
+        query: {
+          loja_id: `eq.${storeId}`,
+          oculto: 'is.false',
+          select: PUBLIC_ITEM_COLUMNS,
+          order: 'assetid',
+          limit: LOTE,
+          offset,
+        },
       })
       rows.push(...page)
       if (page.length < LOTE) break
     }
-    return attachPrices(rows.map((row) => row.dados).sort(compareItems))
+    const settings = new Map(rows.map((row) => [row.dados.id, row]))
+    const { items, pricesOk } = await attachPrices(rows.map((row) => row.dados).sort(compareItems), rules)
+    const out = items.map((item) => withSettings(item, settings.get(item.id)))
+    // Vendidos vão para o fim: continuam na loja até sair do inventário, mas não disputam a vitrine.
+    out.sort((a, b) => (a.status === 'vendido') - (b.status === 'vendido'))
+    return { items: out, pricesOk }
   },
   {
     name: 'loja-itens',
@@ -177,6 +277,22 @@ export const getStoreItems = defineCachedFunction(
     validate: (entry) => entry.value !== undefined && entry.value.pricesOk !== false,
   },
 )
+
+/**
+ * Ajustes do revendedor sobre o item: preço manual ou "sob consulta" e a situação (reservado ou
+ * vendido). O preço manual troca o do revendedor e mantém o preço Steam para o riscado.
+ */
+function withSettings(item, row) {
+  const out = { ...item, status: row?.situacao ?? null }
+  if (row?.sob_consulta) return { ...out, price: null, ask: true }
+  if (row?.preco != null) {
+    return {
+      ...out,
+      price: { steam: item.price?.steam ?? null, estimated: item.price?.estimated ?? false, seller: Number(row.preco) },
+    }
+  }
+  return out
+}
 
 /** O que o painel mostra da loja. */
 export function panelStore(store) {
@@ -201,5 +317,10 @@ export function panelStore(store) {
     items: store.itens?.[0]?.count ?? 0,
     readAt: store.inventario_em,
     nextRefreshAt: readAt ? new Date(readAt + REFRESH_INTERVAL).toISOString() : null,
+    brand: storeBrand(store),
+    // Usuários das redes como foram gravados, para o formulário da marca.
+    handles: store.redes ?? {},
+    pricing: { discount: Math.round(storeRules(store).discount * 100), rounding: storeRules(store).rounding },
+    plan: { id: store.plano, value: store.valor == null ? null : Number(store.valor) },
   }
 }

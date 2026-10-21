@@ -21,6 +21,23 @@ export function slugProblem(slug) {
   return null
 }
 
+/**
+ * Texto que lembra Steam ou Valve ("Steam Skins", "St3am", "Ｓｔｅａｍ", "S.t.e.a.m"), com a mesma
+ * troca de letras do endereço. Letras de outros alfabetos parecidas com as latinas ("Ѕteam") ficam
+ * de fora antes, na lista de caracteres aceitos (server/utils/panel.js).
+ */
+export function looksLikeSteam(text) {
+  const base = String(text ?? '')
+    .normalize('NFKC')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+  // Letras soltas separadas por espaço ou pontuação viram uma palavra só ("s t e a m"). "CS Team"
+  // continua separado: só junta quando dos dois lados há uma letra sozinha.
+  const joined = base.replace(/(?<=(?:^|[^a-z0-9|@])[a-z0-9|@])[^a-z0-9|@]+(?=[a-z0-9|@](?:[^a-z0-9|@]|$))/g, '')
+  return [base, joined].some((value) => /steam|valve/.test(lookalike(value.replace(/[^a-z0-9|@]+/g, '-'))))
+}
+
 // Troca o que costuma imitar letras ("st3am", "stearn", "va1ve") antes de procurar Steam e Valve:
 // endereço parecido com o da Steam lembra golpe. O hífen fica: sem ele, "cs-team" viraria "csteam".
 function lookalike(value) {
