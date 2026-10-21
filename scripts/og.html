@@ -3,6 +3,10 @@
   Imagem de compartilhamento da página inicial (1200×630). Gerada por scripts/og.js, que tira um
   print desta página com o Chrome ou o Edge e grava em public/og.png. Mesmas cores e fonte da
   loja; as skins são da loja de exemplo. Sem preço: a imagem fica meses no cache do WhatsApp.
+  Só skins, sem texto: no computador o WhatsApp mostra a imagem como miniatura quadrada,
+  recortada perto do meio, e qualquer recorte de um mosaico continua mostrando skins inteiras.
+  Título e descrição aparecem em texto logo abaixo da imagem. As skins mais conhecidas ficam nas
+  duas colunas do meio. Para trocar as skins, edite este arquivo e rode npm run og.
 -->
 <html lang="pt-BR">
   <head>
@@ -31,57 +35,15 @@
 
       body {
         display: grid;
-        grid-template-columns: 1fr 520px;
-        gap: 56px;
-        padding: 56px 64px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 26px 20px;
+        align-content: center;
+        padding: 0 40px;
         background: #1d232c;
         color: #e8ecf1;
         font-family: 'Saira Variable', sans-serif;
         font-weight: 420;
         -webkit-font-smoothing: antialiased;
-      }
-
-      .copy {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-
-      .wordmark,
-      h1 {
-        font-stretch: 62%;
-        font-weight: 760;
-        line-height: 0.92;
-      }
-
-      .wordmark {
-        font-size: 36px;
-      }
-
-      h1 {
-        font-size: 104px;
-        letter-spacing: -0.005em;
-      }
-
-      .trust {
-        padding-left: 18px;
-        border-left: 4px solid #eef2f6;
-        color: #97a3b6;
-        font-size: 24px;
-        line-height: 1.35;
-      }
-
-      .trust strong {
-        display: block;
-        color: #e8ecf1;
-        font-weight: 620;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 22px 18px;
-        align-content: center;
       }
 
       .stage {
@@ -134,22 +96,26 @@
     </style>
   </head>
   <body>
-    <div class="copy">
-      <p class="wordmark">Vitrine</p>
-      <h1>Seu inventário vira uma loja de skins</h1>
-      <p class="trust">
-        <strong>Não pedimos login da Steam.</strong>
-        Usamos só o seu inventário público.
-      </p>
-    </div>
-
-    <div class="grid">
+      <div style="--rarity: #8847ff">
+        <div class="stage">
+          <img src="https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk7uW-V7JkMPWBMWuZxuZi_rZsS3zgzU8isW3dnIr6eHKfPVAhDpojEe9YsUW4xta1Nuzm5FDci4NbjXKpmWVQppo/360fx360f" alt="" />
+        </div>
+        <p class="kind">AWP</p>
+        <p class="name">Atheris</p>
+      </div>
       <div style="--rarity: #eb4b4b; --rarity-text: #f07272">
         <div class="stage">
           <img src="https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Q7uCvZaZkNM-SA1iDwP5muOh7Sha-lA8lvziMgIr9HifOOV5kFMRxFuEM5hi_xNXhMbmx5VCMjd9MyCv6jigc6n064ucLAvZ3_6bViV3fcepqpLtspE0/360fx360f" alt="" />
         </div>
         <p class="kind"><span class="star">★</span> Karambit</p>
         <p class="name">Doppler</p>
+      </div>
+      <div style="--rarity: #eb4b4b; --rarity-text: #f07272">
+        <div class="stage">
+          <img src="https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Tk5UvzWCL2kpn2-DFk_OKherB0H_KfG2Kv0ed4u95kSi26gBBp6jvcyY34J3jGZw51CJt1R-Beuxfqk4fhPu7n5VTY2tpHn3343y5P6DErvbh5izSzPA/360fx360f" alt="" />
+        </div>
+        <p class="kind"><span class="star">★</span> Sport Gloves</p>
+        <p class="name">Vice</p>
       </div>
       <div style="--rarity: #d32ce6">
         <div class="stage">
@@ -160,18 +126,31 @@
       </div>
       <div style="--rarity: #eb4b4b; --rarity-text: #f07272">
         <div class="stage">
-          <img src="https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Tk5UvzWCL2kpn2-DFk_OKherB0H_KfG2Kv0ed4u95kSi26gBBp6jvcyY34J3jGZw51CJt1R-Beuxfqk4fhPu7n5VTY2tpHn3343y5P6DErvbh5izSzPA/360fx360f" alt="" />
+          <img src="https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwjFS4_ega6F_H_OGMWrEwL9lj_F7Rienhgk1tjyIpYPwJiPTcAAoCpsiEO5ZsUbpm9C2Zuni4VHW3o5EzSX62HxP7Sg96-hWVqYi_6TJz1aW0nxrkGs/360fx360f" alt="" />
         </div>
-        <p class="kind"><span class="star">★</span> Sport Gloves</p>
-        <p class="name">Vice</p>
+        <p class="kind">M4A1-S</p>
+        <p class="name">Printstream</p>
+      </div>
+      <div style="--rarity: #eb4b4b; --rarity-text: #f07272">
+        <div class="stage">
+          <img src="https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Wts2sab1iLvWHMWad_uN3ouNlSha1lBkijDGMnYftb3OTbVRyD8Z1RrNctkS6kobkZLzi7gTW2NpFxH33hi9Nuno65uxXAqs7uvqA7lyFHH4/360fx360f" alt="" />
+        </div>
+        <p class="kind"><span class="star">★</span> <span class="stattrak">StatTrak™</span> M9 Bayonet</p>
+        <p class="name">Marble Fade</p>
+      </div>
+      <div style="--rarity: #eb4b4b; --rarity-text: #f07272">
+        <div class="stage">
+          <img src="https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL1m5fn8Sdk7OeRbKFsJ8-DHG6e1f1iouRoQha_nBovp3OGmdeqInyVP1V0XsYlRbEI50a5wNyzZr605AyI3t5MmCSohylAuC89_a9cBoMY9UkV/360fx360f" alt="" />
+        </div>
+        <p class="kind">Desert Eagle</p>
+        <p class="name">Printstream</p>
       </div>
       <div style="--rarity: #8847ff">
         <div class="stage">
-          <img src="https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk7uW-V7JkMPWBMWuZxuZi_rZsS3zgzU8isW3dnIr6eHKfPVAhDpojEe9YsUW4xta1Nuzm5FDci4NbjXKpmWVQppo/360fx360f" alt="" />
+          <img src="https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL2kpnj9h1a7s2oaaBoH_yaCW-Ej-8u5bZvHnq1w0Vz62TUzNj4eCiVblMmXMAkROJeskLpkdXjMrzksVTAy9US8PY25So/360fx360f" alt="" />
         </div>
-        <p class="kind">AWP</p>
-        <p class="name">Atheris</p>
+        <p class="kind">Glock-18</p>
+        <p class="name">Fade</p>
       </div>
-    </div>
   </body>
 </html>

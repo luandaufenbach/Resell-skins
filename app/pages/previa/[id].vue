@@ -25,7 +25,7 @@ useSeoMeta({
   description: shareText,
   ogTitle: 'Prévia de loja | Vitrine',
   ogDescription: shareText,
-  ogImage: `${origin}/og.png`,
+  ogImage: `${origin}/og.png?v=2`,
 })
 </script>
 

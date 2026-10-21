@@ -185,7 +185,9 @@ Decisões (o dono mandou seguir com a recomendação em 19/10/2026):
 - [ ] Domínio próprio (.com.br) comprado e ligado à Render antes do primeiro revendedor.
 - [x] Cache em memória com teto: driver lru-cache, 64 MB (só em produção; em desenvolvimento o
       Nitro guarda o cache em `.nuxt/cache`). A prévia guarda uma cópia do inventário por 24h.
-- [ ] Com o site no ar, colar o link de `/` no WhatsApp e conferir imagem e título (fase 3).
+- [x] Com o site no ar, colar o link de `/` no WhatsApp e conferir imagem e título (fase 3).
+      Conferido em 20/10/2026: título e descrição certos; no computador o WhatsApp mostra a imagem
+      como miniatura quadrada e cortava o texto dela. A imagem virou um mosaico só de skins.
 - [x] Tabelas com RLS: lojas, itens, sincronizações, movimentações do inventário, eventos,
       pagamentos e testes grátis usados. Testado: uma conta não lê nem altera a loja de outra.
 - [x] Verificação de posse pelo código no perfil Steam; verificação manual pelo admin com

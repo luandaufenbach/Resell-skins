@@ -44,11 +44,11 @@ useSeoMeta({
   ogSiteName: 'Vitrine',
   ogLocale: 'pt_BR',
   ogUrl: `${origin}/`,
-  ogImage: `${origin}/og.png`,
+  ogImage: `${origin}/og.png?v=2`,
   ogImageWidth: 1200,
   ogImageHeight: 630,
   ogImageType: 'image/png',
-  ogImageAlt: 'Quatro skins de CS2 da loja de exemplo e o texto: Seu inventário vira uma loja de skins',
+  ogImageAlt: 'Oito skins de CS2 da loja de exemplo: facas, luvas, rifles e pistolas',
   twitterCard: 'summary_large_image',
 })
 </script>
