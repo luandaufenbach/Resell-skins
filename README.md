@@ -48,7 +48,7 @@ app/
   components/PanelBrand.vue  aba Marca: logo, banner, cores, nome, frase, WhatsApp, redes, endereço
   components/BannerFocus.vue ponto de foco do banner (mira) e os recortes de celular e computador
   components/BrandPreview.vue prévia do topo da loja no tema escolhido
-  components/PanelItems.vue  aba Itens: busca, filtros, mostrar/ocultar
+  components/PanelItems.vue  aba Itens: grade de cartões, busca, filtros, ordem, mostrar/ocultar
   components/ItemEditor.vue  edição de um item: preço padrão ou manual, sob consulta, custo, situação
   components/PanelPricing.vue aba Preços: desconto padrão e arredondamento, com exemplos do inventário
   components/PanelRenewal.vue aviso de vencimento com o valor do plano e a chave Pix

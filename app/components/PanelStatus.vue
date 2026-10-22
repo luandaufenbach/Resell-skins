@@ -51,7 +51,7 @@ const storeUrl = computed(() => `${useSiteUrl()}/${props.store.slug}`)
 <template>
   <div class="tab-body">
     <!-- Verificação: a loja só fica pública depois dela -->
-    <section v-if="!store.verified" class="painel-block" aria-labelledby="verificar">
+    <section v-if="!store.verified" class="painel-block painel-block--wide" aria-labelledby="verificar">
       <h2 id="verificar" class="block-title">Verifique o seu inventário</h2>
       <p class="muted">
         A loja só aparece para os clientes depois desta etapa. Ela prova que o inventário é seu, sem pedir login
@@ -146,20 +146,29 @@ const storeUrl = computed(() => `${useSiteUrl()}/${props.store.slug}`)
 </template>
 
 <style scoped>
+/* Painéis lado a lado no computador (situação, inventário e conta) e um embaixo do outro no
+   celular. A verificação ocupa a linha inteira. */
 .tab-body {
-  display: grid;
-  gap: 2rem;
-  max-width: 44rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
+/* Os painéis de uma linha dividem a largura entre si: três, dois ou um. */
 .painel-block {
   display: grid;
+  flex: 1 1 20rem;
+  align-content: start;
   gap: 0.875rem;
+  min-width: 0;
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
 }
 
-.painel-block + .painel-block {
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--line);
+.painel-block--wide {
+  flex-basis: 100%;
 }
 
 .block-title {
@@ -189,15 +198,7 @@ const storeUrl = computed(() => `${useSiteUrl()}/${props.store.slug}`)
 
 /* Situação: a borda da esquerda diz que a loja está no ar. */
 .status {
-  padding: 1.25rem 1rem;
   border-left: 3px solid var(--accent-edge);
-  border-radius: 0 var(--radius-m) var(--radius-m) 0;
-  background: var(--surface);
-}
-
-.status + .painel-block {
-  border-top: 0;
-  padding-top: 0;
 }
 
 /* ---- Passos da verificação. É uma sequência de verdade: os números ajudam. */
@@ -232,6 +233,14 @@ const storeUrl = computed(() => `${useSiteUrl()}/${props.store.slug}`)
   justify-self: start;
 }
 
+/* Computador: os três passos lado a lado, na ordem de leitura. */
+@media (min-width: 64rem) {
+  .steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+  }
+}
+
 /* O código parece uma etiqueta de nome do jogo: grande, condensado, fácil de conferir no perfil. */
 .code {
   display: flex;
@@ -245,7 +254,7 @@ const storeUrl = computed(() => `${useSiteUrl()}/${props.store.slug}`)
   border: 1px dashed var(--field-line);
   border-radius: var(--radius-s);
   background: var(--stage);
-  font-size: clamp(2.25rem, 11vw, 3rem);
+  font-size: clamp(2.25rem, 11vw, 2.75rem);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
   user-select: all;

@@ -5,9 +5,9 @@ const props = defineProps({
   store: { type: Object, required: true },
 })
 
-const { data, status, error, refresh, patchItem } = usePanelItems()
+const { data, status: fetchStatus, error, refresh, patchItem } = usePanelItems()
 const items = computed(() => data.value?.items ?? [])
-const loading = computed(() => status.value === 'pending' || status.value === 'idle')
+const loading = computed(() => fetchStatus.value === 'pending' || fetchStatus.value === 'idle')
 
 // Se a loja mudou (outra aba salvou o desconto ou o inventário foi lido de novo), a lista também.
 watch(
@@ -15,31 +15,92 @@ watch(
   () => refresh(),
 )
 
-const FILTERS = [
+// ---- Filtros: categoria (e arma, dentro dela), situação e busca, como na loja. A contagem de cada
+// chip aplica os outros filtros, então mostra quantos itens aparecem ao tocar nele.
+const STATUSES = [
   { id: 'todos', label: 'Todos', test: () => true },
   { id: 'ocultos', label: 'Ocultos', test: (item) => item.hidden },
   { id: 'manual', label: 'Preço manual', test: (item) => item.price != null || item.ask },
+  // Sem preço Steam e sem preço seu: a loja mostra "Sob consulta".
+  { id: 'sem-preco', label: 'Sem preço', test: (item) => item.standard == null && item.price == null && !item.ask },
   { id: 'reservados', label: 'Reservados', test: (item) => item.status === 'reservado' },
   { id: 'vendidos', label: 'Vendidos', test: (item) => item.status === 'vendido' },
 ]
-const filter = ref('todos')
+const status = ref('todos')
+const category = ref('tudo')
+const group = ref(null)
 const search = ref('')
-const term = computed(() => normalizeText(search.value.trim()))
-const matches = (item) =>
-  !term.value || normalizeText([item.marketName, item.localName].filter(Boolean).join(' ')).includes(term.value)
+const sort = ref('raridade')
+watch(category, () => (group.value = null))
 
-const counts = computed(() =>
-  Object.fromEntries(FILTERS.map((f) => [f.id, items.value.filter((item) => matches(item) && f.test(item)).length])),
-)
-const filtered = computed(() => {
-  const test = FILTERS.find((f) => f.id === filter.value).test
-  return items.value.filter((item) => matches(item) && test(item))
+const term = computed(() => normalizeText(search.value.trim()))
+const RULES = Object.entries({
+  search: (item) =>
+    !term.value || normalizeText([item.marketName, item.localName].filter(Boolean).join(' ')).includes(term.value),
+  category: (item) => category.value === 'tudo' || item.category === category.value,
+  group: (item) => !group.value || itemGroup(item) === group.value,
+  status: (item) => STATUSES.find((s) => s.id === status.value).test(item),
 })
+const passes = (item, skip = []) => RULES.every(([name, rule]) => skip.includes(name) || rule(item))
+
+const present = computed(() => new Set(items.value.map((item) => item.category)))
+const categoryChips = computed(() => [{ id: 'tudo', label: 'Tudo' }, ...CATEGORIES.filter((c) => present.value.has(c.id))])
+const categoryCounts = computed(() => {
+  const map = { tudo: 0 }
+  for (const item of items.value) {
+    if (!passes(item, ['category', 'group'])) continue
+    map.tudo++
+    map[item.category] = (map[item.category] ?? 0) + 1
+  }
+  return map
+})
+
+// Segundo nível: as armas (ou os tipos, em Agentes e Outros) da categoria escolhida.
+const groups = computed(() => {
+  if (category.value === 'tudo') return []
+  const names = new Set(items.value.filter((item) => item.category === category.value).map(itemGroup))
+  return [...names].sort((a, b) => a.localeCompare(b))
+})
+const groupsByType = computed(() => ['agentes', 'outros'].includes(category.value))
+const groupCounts = computed(() => {
+  const map = {}
+  for (const item of items.value) {
+    if (!passes(item, ['group'])) continue
+    map[itemGroup(item)] = (map[itemGroup(item)] ?? 0) + 1
+  }
+  return map
+})
+
+const statusCounts = computed(() =>
+  Object.fromEntries(STATUSES.map((s) => [s.id, items.value.filter((item) => passes(item, ['status']) && s.test(item)).length])),
+)
+
+// Preço que a loja mostra (manual ou padrão); sob consulta e sem preço vão para o fim.
+const shownValue = (item) => (item.ask ? null : (item.price ?? item.standard))
+const SORTS = {
+  raridade: null,
+  'maior-preco': (a, b) => (shownValue(b) ?? -1) - (shownValue(a) ?? -1),
+  'menor-preco': (a, b) => (shownValue(a) ?? Infinity) - (shownValue(b) ?? Infinity),
+  nome: (a, b) => `${a.weapon} ${a.skin}`.localeCompare(`${b.weapon} ${b.skin}`),
+  float: (a, b) => (a.float ?? 2) - (b.float ?? 2),
+}
+
+const filtered = computed(() => {
+  const list = items.value.filter((item) => passes(item))
+  return SORTS[sort.value] ? [...list].sort(SORTS[sort.value]) : list
+})
+const activeFilters = computed(() => category.value !== 'tudo' || status.value !== 'todos' || Boolean(term.value))
+
+function clearFilters() {
+  search.value = ''
+  category.value = 'tudo'
+  status.value = 'todos'
+}
 
 const PAGE_SIZE = 60
 const limit = ref(PAGE_SIZE)
 const visible = computed(() => filtered.value.slice(0, limit.value))
-watch([filter, search], () => (limit.value = PAGE_SIZE))
+watch([status, category, group, search, sort], () => (limit.value = PAGE_SIZE))
 
 // ---- Mostrar ou ocultar na hora
 const toggling = ref(new Set())
@@ -93,6 +154,7 @@ function rarityStyle(item) {
 }
 </script>
 
+
 <template>
   <div class="items">
     <div class="items-intro">
@@ -104,23 +166,78 @@ function rarityStyle(item) {
     </div>
 
     <div class="items-tools">
-      <label class="search">
-        <AppIcon name="search" />
-        <span class="visually-hidden">Buscar item</span>
-        <input v-model="search" type="search" placeholder="Buscar skin" enterkeyhint="search" />
-      </label>
-      <div class="chips" role="group" aria-label="Mostrar">
-        <button
-          v-for="f in FILTERS"
-          :key="f.id"
-          type="button"
-          class="chip"
-          :aria-pressed="filter === f.id"
-          @click="filter = f.id"
-        >
-          {{ f.label }}
-          <span v-if="items.length" class="chip-count">{{ counts[f.id] }}</span>
-        </button>
+      <div class="tools-top">
+        <label class="search">
+          <AppIcon name="search" />
+          <span class="visually-hidden">Buscar item</span>
+          <input v-model="search" type="search" placeholder="Buscar skin" enterkeyhint="search" />
+        </label>
+        <label class="sort">
+          <span class="filter-label">Ordenar</span>
+          <select v-model="sort">
+            <option value="raridade">Raridade</option>
+            <option value="maior-preco">Maior preço</option>
+            <option value="menor-preco">Menor preço</option>
+            <option value="nome">Nome</option>
+            <option value="float">Menor float</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="filter-row">
+        <span id="filtro-categoria" class="filter-label">Categoria</span>
+        <div class="chips" role="group" aria-labelledby="filtro-categoria">
+          <button
+            v-for="c in categoryChips"
+            :key="c.id"
+            type="button"
+            class="chip"
+            :aria-pressed="category === c.id"
+            :disabled="!categoryCounts[c.id] && category !== c.id"
+            @click="category = c.id"
+          >
+            {{ c.label }}
+            <span v-if="items.length" class="chip-count">{{ categoryCounts[c.id] ?? 0 }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div v-if="groups.length > 1" class="filter-row">
+        <span id="filtro-arma" class="filter-label">{{ groupsByType ? 'Tipo' : 'Arma' }}</span>
+        <div class="chips" role="group" aria-labelledby="filtro-arma">
+          <button type="button" class="chip" :aria-pressed="!group" @click="group = null">
+            {{ groupsByType ? 'Todos' : 'Todas' }}
+          </button>
+          <button
+            v-for="name in groups"
+            :key="name"
+            type="button"
+            class="chip"
+            :aria-pressed="group === name"
+            :disabled="!groupCounts[name] && group !== name"
+            @click="group = group === name ? null : name"
+          >
+            {{ name }}
+            <span class="chip-count">{{ groupCounts[name] ?? 0 }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <span id="filtro-situacao" class="filter-label">Situação</span>
+        <div class="chips" role="group" aria-labelledby="filtro-situacao">
+          <button
+            v-for="s in STATUSES"
+            :key="s.id"
+            type="button"
+            class="chip"
+            :aria-pressed="status === s.id"
+            @click="status = s.id"
+          >
+            {{ s.label }}
+            <span v-if="items.length" class="chip-count">{{ statusCounts[s.id] }}</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -134,47 +251,68 @@ function rarityStyle(item) {
       <p class="empty-title">Nenhum item no inventário</p>
       <p class="muted">Quando houver skins no inventário, atualize na aba Loja e elas aparecem aqui.</p>
     </div>
-    <p v-else-if="!filtered.length" class="muted">
-      {{ filter === 'todos' ? 'Nenhum item encontrado' : 'Nenhum item com esse filtro' }}{{ search ? ` para “${search}”` : '' }}.
-    </p>
+    <div v-else-if="!filtered.length" class="empty">
+      <p class="empty-title">Nenhum item encontrado{{ search ? ` para “${search}”` : '' }}</p>
+      <button v-if="activeFilters" class="btn" type="button" @click="clearFilters">Limpar busca e filtros</button>
+    </div>
 
-    <ul v-else class="rows">
-      <li v-for="item in visible" :key="item.id" class="row" :class="{ 'is-hidden': item.hidden }" :style="rarityStyle(item)">
-        <button class="row-main" type="button" :aria-label="`Editar ${item.marketName}`" @click="editing = item">
-          <span class="thumb">
-            <img v-if="item.image" :src="steamImage(item.image, '128fx96f')" alt="" width="96" height="72" loading="lazy" />
-          </span>
-          <span class="row-name">
-            <span class="row-kind">{{ rowKind(item) }}</span>
-            <span class="row-title">{{ itemTitle(item) }}</span>
-            <span v-if="rowMeta(item)" class="row-meta">{{ rowMeta(item) }}</span>
-          </span>
-          <span class="row-price">
-            <span class="row-seller">{{ shownPrice(item) }}</span>
-            <span class="row-source">{{ priceSource(item) }}</span>
-            <span v-if="(item.ask || item.price != null) && item.standard != null" class="row-source">
-              padrão {{ formatBRL(item.standard) }}
-            </span>
-          </span>
-          <span v-if="item.hidden || item.status || item.cost != null" class="row-tags">
-            <span v-if="item.hidden" class="tag">Oculto</span>
-            <span v-if="item.status" class="tag" :class="`tag--${item.status}`">{{ STATUS_LABEL[item.status] }}</span>
-            <span v-if="item.cost != null" class="tag tag--cost">Custo {{ formatBRL(item.cost) }}</span>
-          </span>
-        </button>
-        <button
-          class="eye"
-          type="button"
-          :aria-pressed="!item.hidden"
-          :aria-label="`${item.hidden ? 'Mostrar' : 'Ocultar'} ${item.marketName} na loja`"
-          :title="item.hidden ? 'Mostrar na loja' : 'Ocultar da loja'"
-          :disabled="toggling.has(item.id)"
-          @click="toggleHidden(item)"
+    <template v-else>
+      <p class="result-count muted" role="status">
+        {{ filtered.length === 1 ? '1 item' : `${filtered.length} itens` }}
+      </p>
+      <ul class="tiles">
+        <li
+          v-for="item in visible"
+          :key="item.id"
+          class="tile"
+          :class="{ 'is-hidden': item.hidden }"
+          :style="rarityStyle(item)"
         >
-          <AppIcon :name="item.hidden ? 'eye-off' : 'eye'" />
-        </button>
-      </li>
-    </ul>
+          <button class="tile-main" type="button" :aria-label="`Editar ${item.marketName}`" @click="editing = item">
+            <span class="thumb">
+              <img
+                v-if="item.image"
+                :src="steamImage(item.image, '256fx192f')"
+                alt=""
+                width="128"
+                height="96"
+                loading="lazy"
+              />
+            </span>
+            <span class="tile-name">
+              <span class="tile-kind">{{ rowKind(item) }}</span>
+              <span class="tile-title">{{ itemTitle(item) }}</span>
+              <span v-if="rowMeta(item)" class="tile-meta">{{ rowMeta(item) }}</span>
+            </span>
+            <span class="tile-price">
+              <span class="tile-values">
+                <span class="tile-seller">{{ shownPrice(item) }}</span>
+                <span v-if="(item.ask || item.price != null) && item.standard != null" class="tile-standard">
+                  padrão {{ formatBRL(item.standard) }}
+                </span>
+              </span>
+              <span class="tile-source">{{ priceSource(item) }}</span>
+            </span>
+            <span v-if="item.hidden || item.status || item.cost != null" class="tile-tags">
+              <span v-if="item.hidden" class="tag">Oculto</span>
+              <span v-if="item.status" class="tag" :class="`tag--${item.status}`">{{ STATUS_LABEL[item.status] }}</span>
+              <span v-if="item.cost != null" class="tag tag--cost">Custo {{ formatBRL(item.cost) }}</span>
+            </span>
+          </button>
+          <button
+            class="eye"
+            type="button"
+            :aria-pressed="!item.hidden"
+            :aria-label="`${item.hidden ? 'Mostrar' : 'Ocultar'} ${item.marketName} na loja`"
+            :title="item.hidden ? 'Mostrar na loja' : 'Ocultar da loja'"
+            :disabled="toggling.has(item.id)"
+            @click="toggleHidden(item)"
+          >
+            <AppIcon :name="item.hidden ? 'eye-off' : 'eye'" />
+          </button>
+        </li>
+      </ul>
+    </template>
 
     <div v-if="filtered.length > visible.length" class="more">
       <button class="btn" type="button" @click="limit += PAGE_SIZE">
@@ -190,7 +328,6 @@ function rarityStyle(item) {
 .items {
   display: grid;
   gap: 1.25rem;
-  max-width: 64rem;
 }
 
 .items-intro {
@@ -210,14 +347,23 @@ function rarityStyle(item) {
   color: var(--muted);
 }
 
+/* ---- Busca, ordem e filtros */
 .items-tools {
   display: grid;
   gap: 0.75rem;
 }
 
+.tools-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
 .search {
   position: relative;
   display: flex;
+  flex: 1 1 16rem;
   align-items: center;
   max-width: 28rem;
 }
@@ -231,22 +377,49 @@ function rarityStyle(item) {
   pointer-events: none;
 }
 
-.search input {
-  width: 100%;
+.search input,
+.sort select {
   min-height: 44px;
-  padding: 0 0.75rem 0 2.5rem;
   border: 1px solid var(--field-line);
   border-radius: var(--radius-m);
   background: var(--stage);
+}
+
+.search input {
+  width: 100%;
+  padding: 0 0.75rem 0 2.5rem;
 }
 
 .search input::placeholder {
   color: var(--placeholder);
 }
 
-.search input:focus-visible {
+.search input:focus-visible,
+.sort select:focus-visible {
   outline-offset: 0;
   border-color: var(--accent-edge);
+}
+
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort select {
+  padding: 0 0.75rem;
+}
+
+.filter-label {
+  color: var(--muted);
+  font-size: var(--step--1);
+}
+
+/* No celular, o nome do filtro fica em cima e os chips rolam de lado. */
+.filter-row {
+  display: grid;
+  gap: 0.375rem;
+  min-width: 0;
 }
 
 /* A folga em cima e embaixo deixa o anel de foco aparecer inteiro na faixa que rola. */
@@ -263,37 +436,58 @@ function rarityStyle(item) {
   min-height: 40px;
 }
 
-/* ---- Linhas: como a lista do inventário do jogo, a skin à esquerda na cor da raridade. */
-.rows {
-  display: grid;
-  border-top: 1px solid var(--line);
+.result-count {
+  font-size: var(--step--1);
 }
 
-.row {
+/* ---- Grade de cartões: uma coluna no celular e até quatro no computador. A skin fica à esquerda,
+   no palco da cor da raridade, como no inventário do jogo. */
+.tiles {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  border-bottom: 1px solid var(--line);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+  gap: 0.75rem;
+  margin-top: -0.5rem;
 }
 
-.row-main {
+.tile {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+
+.tile:hover {
+  border-color: var(--field-line);
+}
+
+.tile-main {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) auto;
+  grid-template-columns: 96px minmax(0, 1fr);
   grid-template-areas:
-    'thumb name price'
-    'thumb tags tags';
-  gap: 0.25rem 0.75rem;
+    'thumb name'
+    'price price'
+    'tags tags';
+  align-content: start;
   align-items: center;
-  min-height: 72px;
-  padding: 0.625rem 0;
+  gap: 0.625rem 0.75rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem;
   border: 0;
+  border-radius: var(--radius-m);
   background: none;
+  color: var(--text);
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
 
-.row-main:hover .row-title {
+.tile-main:focus-visible {
+  outline-offset: -2px;
+}
+
+.tile-main:hover .tile-title {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -315,14 +509,16 @@ function rarityStyle(item) {
   object-fit: contain;
 }
 
-.row-name {
+/* Espaço à direita para o olho, que fica no canto do cartão. */
+.tile-name {
   grid-area: name;
   display: grid;
   min-width: 0;
+  padding-right: 2.75rem;
 }
 
-.row-kind,
-.row-meta {
+.tile-kind,
+.tile-meta {
   overflow: hidden;
   color: var(--muted);
   font-size: var(--step--1);
@@ -330,12 +526,13 @@ function rarityStyle(item) {
   text-overflow: ellipsis;
 }
 
-.row-meta {
+.tile-meta {
   font-variant-numeric: tabular-nums;
 }
 
-.row-title {
+.tile-title {
   overflow: hidden;
+  font-size: var(--step-1);
   font-stretch: var(--semi);
   font-weight: 640;
   line-height: 1.2;
@@ -343,28 +540,39 @@ function rarityStyle(item) {
   text-overflow: ellipsis;
 }
 
-/* Coluna de preço com teto: o nome da skin nunca é esmagado. */
-.row-price {
+.tile-price {
   grid-area: price;
-  display: grid;
-  justify-items: end;
-  max-width: 8.5rem;
-  text-align: right;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--line);
   font-variant-numeric: tabular-nums;
 }
 
-.row-seller {
+.tile-values {
+  display: grid;
+  min-width: 0;
+}
+
+.tile-seller {
+  font-size: var(--step-1);
   font-weight: 650;
   white-space: nowrap;
 }
 
-.row-source {
+.tile-standard,
+.tile-source {
   color: var(--muted);
   font-size: var(--step--1);
-  line-height: 1.3;
 }
 
-.row-tags {
+.tile-source {
+  flex: none;
+}
+
+.tile-tags {
   grid-area: tags;
   display: flex;
   flex-wrap: wrap;
@@ -393,22 +601,29 @@ function rarityStyle(item) {
   font-weight: 500;
 }
 
-/* Oculto: a linha fica apagada, mas continua fácil de achar e de mostrar de novo. */
-.row.is-hidden .thumb img,
-.row.is-hidden .row-title,
-.row.is-hidden .row-seller {
+/* Oculto: o cartão fica apagado e tracejado, mas continua fácil de achar e de mostrar de novo. */
+.tile.is-hidden {
+  border-style: dashed;
+  background: transparent;
+}
+
+.tile.is-hidden .thumb img,
+.tile.is-hidden .tile-title,
+.tile.is-hidden .tile-seller {
   opacity: 0.55;
 }
 
 .eye {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
   display: grid;
   place-items: center;
   width: 44px;
   height: 44px;
-  margin-left: 0.5rem;
   border: 1px solid var(--field-line);
   border-radius: var(--radius-m);
-  background: transparent;
+  background: var(--surface);
   color: var(--text);
   cursor: pointer;
 }
@@ -419,12 +634,13 @@ function rarityStyle(item) {
 }
 
 .eye[aria-pressed='false'] {
-  color: var(--muted);
   border-style: dashed;
+  background: transparent;
+  color: var(--muted);
 }
 
 .eye:hover {
-  background: var(--surface);
+  background: var(--surface-2);
 }
 
 .eye:disabled {
@@ -434,7 +650,8 @@ function rarityStyle(item) {
 
 .empty {
   display: grid;
-  gap: 0.25rem;
+  justify-items: start;
+  gap: 0.75rem;
   padding: 2rem 0;
 }
 
@@ -448,30 +665,46 @@ function rarityStyle(item) {
   justify-content: center;
 }
 
+/* Celular: uma coluna só, então o cartão fica baixo. Preço e etiquetas vão ao lado da foto, embaixo
+   do nome, e a lista mostra mais itens por tela. */
+@media (max-width: 39.99rem) {
+  .tiles {
+    gap: 0.5rem;
+  }
+
+  .tile-main {
+    grid-template-columns: 80px minmax(0, 1fr);
+    grid-template-areas:
+      'thumb name'
+      'thumb price'
+      'thumb tags';
+    align-items: start;
+    gap: 0.375rem 0.75rem;
+    padding: 0.625rem;
+  }
+
+  .tile-price {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+/* Computador: o nome do filtro à esquerda e os chips quebrando linha. */
 @media (min-width: 48rem) {
+  .filter-row {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+  }
+
+  .filter-row > .filter-label {
+    padding-top: 0.625rem;
+  }
+
   .chips {
     flex-wrap: wrap;
     margin-inline: 0;
     padding-inline: 0;
-  }
-
-  .row-price {
-    max-width: none;
-  }
-
-  .items-tools {
-    grid-template-columns: minmax(0, 20rem) 1fr;
-    align-items: center;
-  }
-
-  .row-main {
-    grid-template-columns: 88px minmax(0, 1fr) minmax(8rem, auto) minmax(10rem, 14rem);
-    grid-template-areas: 'thumb name tags price';
-    gap: 1rem;
-  }
-
-  .row-tags {
-    justify-content: flex-end;
   }
 }
 </style>

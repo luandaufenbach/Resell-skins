@@ -111,6 +111,29 @@ const askLink = computed(() => {
   background: var(--surface);
 }
 
+/* Computador: o texto à esquerda e a chave Pix com o botão à direita. */
+@media (min-width: 64rem) {
+  .renewal:has(.pix) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+    column-gap: 2.5rem;
+  }
+
+  .renewal:has(.pix) > :not(.pix, .btn) {
+    grid-column: 1;
+  }
+
+  .renewal:has(.pix) > .pix {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+  }
+
+  .renewal:has(.pix) > .btn {
+    grid-column: 2;
+    grid-row: 3;
+  }
+}
+
 .renewal.is-closed,
 .renewal-line.is-closed {
   border-left-color: var(--alert);

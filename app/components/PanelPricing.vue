@@ -116,7 +116,7 @@ function onDiscountInput(event) {
       </p>
     </fieldset>
 
-    <section class="group" aria-labelledby="exemplos">
+    <section class="group samples-group" aria-labelledby="exemplos">
       <h3 id="exemplos" class="group-title">
         {{ loadingItems || samples[0]?.name ? 'Como fica no seu inventário' : 'Exemplos' }}
       </h3>
@@ -154,6 +154,31 @@ function onDiscountInput(event) {
   display: grid;
   gap: 1.75rem;
   max-width: 40rem;
+}
+
+/* Computador: desconto e arredondamento à esquerda, exemplos presos à direita. */
+@media (min-width: 64rem) {
+  .pricing {
+    grid-template-columns: minmax(0, 36rem) minmax(0, 34rem);
+    column-gap: 3.5rem;
+    max-width: none;
+  }
+
+  .pricing > * {
+    grid-column: 1;
+  }
+
+  .pricing > .samples-group {
+    position: sticky;
+    top: 1.5rem;
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    align-self: start;
+    padding: 1.25rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: var(--surface);
+  }
 }
 
 .pricing-intro {
@@ -250,7 +275,7 @@ function onDiscountInput(event) {
 
 .roundings {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
   gap: 0.5rem;
 }
 
@@ -296,11 +321,6 @@ function onDiscountInput(event) {
   color: var(--text);
 }
 
-@media (min-width: 48rem) {
-  .roundings {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
 
 .samples {
   width: 100%;

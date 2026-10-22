@@ -412,7 +412,7 @@ const previewTheme = computed(() => ({ cor: color.value, fundo: background.value
 /* Computador: formulário à esquerda e prévia presa à direita. */
 @media (min-width: 64rem) {
   .brand {
-    grid-template-columns: minmax(0, 34rem) minmax(0, 24.5rem);
+    grid-template-columns: minmax(0, 40rem) minmax(0, 26rem);
     column-gap: 3.5rem;
     max-width: none;
   }

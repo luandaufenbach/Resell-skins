@@ -207,10 +207,6 @@ useSeoMeta({ title: 'Painel | Vitrine', robots: 'noindex' })
   line-height: 1.45;
 }
 
-.painel > :deep(.renewal),
-.painel > :deep(.renewal-line) {
-  max-width: 44rem;
-}
 
 /* Abas como as do inventário do jogo: texto condensado, a ativa sublinhada na cor de destaque. */
 .tabs {

@@ -279,6 +279,11 @@ Decisões (o dono aprovou as recomendações em 20/10/2026):
       e mantida se a loja for apagada, limite também para as tentativas de trocar o endereço, chave
       Pix só quando o aviso aparece.
 
+- [x] Ajuste pedido pelo dono em 21/10/2026: a aba Itens virou uma grade de cartões (uma coluna no
+      celular, até quatro no computador), com filtros de categoria, arma e situação (inclusive
+      "Sem preço") e ordem por raridade, preço, nome ou float. As abas Loja e Preços se dividem
+      em colunas no computador, e o aviso de vencimento põe a chave Pix ao lado do texto.
+
 **Pronto quando:**
 
 - Cada mudança no painel aparece na loja pública.
