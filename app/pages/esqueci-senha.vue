@@ -18,7 +18,7 @@ async function submit() {
   }
 }
 
-useSeoMeta({ title: 'Esqueci a senha | Vitrine', robots: 'noindex' })
+useSeoMeta({ title: 'Esqueci a senha | Revenda', robots: 'noindex' })
 </script>
 
 <template>

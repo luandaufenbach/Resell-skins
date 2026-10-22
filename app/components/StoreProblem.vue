@@ -8,7 +8,7 @@ defineProps({
 
 <template>
   <main class="wrap problem">
-    <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
+    <NuxtLink to="/" class="wordmark display">Revenda</NuxtLink>
     <h1 class="display problem-title">{{ problem.title }}</h1>
     <p class="problem-body">{{ problem.body }}</p>
     <div class="problem-actions">

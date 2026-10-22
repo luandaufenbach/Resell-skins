@@ -10,7 +10,7 @@ const accountCookie = useCookie('vitrine_conta')
 const signedIn = computed(() => Boolean(accountCookie.value))
 const askLink = computed(() =>
   owner.value
-    ? `https://wa.me/${owner.value}?text=${encodeURIComponent('Olá! Tenho uma dúvida sobre a Vitrine.')}`
+    ? `https://wa.me/${owner.value}?text=${encodeURIComponent('Olá! Tenho uma dúvida sobre a Revenda.')}`
     : null,
 )
 
@@ -31,7 +31,7 @@ const specimenOpen = ref(null)
 
 // ---- Compartilhamento: é a primeira coisa que o revendedor vê ao receber o link.
 const origin = useSiteUrl()
-const shareTitle = 'Vitrine: sua loja de skins de CS2 a partir do inventário'
+const shareTitle = 'Revenda: sua loja de skins de CS2 a partir do inventário'
 const shareText =
   'Cole o link do seu perfil da Steam e veja na hora as suas skins numa loja com foto, float, stickers e preço. Sem login da Steam.'
 
@@ -41,7 +41,7 @@ useSeoMeta({
   ogTitle: shareTitle,
   ogDescription: shareText,
   ogType: 'website',
-  ogSiteName: 'Vitrine',
+  ogSiteName: 'Revenda',
   ogLocale: 'pt_BR',
   ogUrl: `${origin}/`,
   ogImage: `${origin}/og.png?v=2`,
@@ -56,7 +56,7 @@ useSeoMeta({
 <template>
   <div class="home">
     <header class="wrap top">
-      <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
+      <NuxtLink to="/" class="wordmark display">Revenda</NuxtLink>
       <nav class="top-actions" aria-label="Conta">
         <NuxtLink v-if="signedIn" to="/painel" class="btn">Painel</NuxtLink>
         <template v-else>
@@ -170,7 +170,7 @@ useSeoMeta({
           <div class="trust-text">
             <p>
               A loja é montada com o mesmo inventário que qualquer pessoa vê no seu perfil. Ninguém da
-              Vitrine vai pedir a sua senha, o código do Steam Guard ou uma chave de API. Se alguém pedir em
+              Revenda vai pedir a sua senha, o código do Steam Guard ou uma chave de API. Se alguém pedir em
               nosso nome, é golpe.
             </p>
             <p>
@@ -225,7 +225,7 @@ useSeoMeta({
           <details>
             <summary>Preciso entrar com a minha conta da Steam?</summary>
             <p>
-              Não. A Vitrine nunca pede login, senha, código do Steam Guard nem chave de API. A loja é montada
+              Não. A Revenda nunca pede login, senha, código do Steam Guard nem chave de API. A loja é montada
               só com o seu inventário público.
             </p>
           </details>

@@ -14,16 +14,16 @@ if (import.meta.server && error.value) setResponseStatus(useRequestEvent(), erro
 
 const origin = useSiteUrl()
 // Quem criou a prévia vai para o cadastro com Steam e WhatsApp preenchidos; quem só recebeu o
-// link vai para o início, que explica o que é a Vitrine.
+// link vai para o início, que explica o que é a Revenda.
 const createTo = computed(() => (data.value?.owner ? { path: '/cadastro', query: { previa: id.value } } : '/'))
 
 // Título e imagem de compartilhamento genéricos: sem o nome do perfil, o link não passa por loja.
 const shareText = 'Prévia gerada a partir de um inventário público da Steam. Não é uma loja verificada.'
 useSeoMeta({
   robots: 'noindex, nofollow',
-  title: () => problem.value?.title ?? 'Prévia de loja | Vitrine',
+  title: () => problem.value?.title ?? 'Prévia de loja | Revenda',
   description: shareText,
-  ogTitle: 'Prévia de loja | Vitrine',
+  ogTitle: 'Prévia de loja | Revenda',
   ogDescription: shareText,
   ogImage: `${origin}/og.png?v=2`,
 })

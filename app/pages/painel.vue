@@ -60,13 +60,13 @@ async function logout() {
   await navigateTo('/entrar')
 }
 
-useSeoMeta({ title: 'Painel | Vitrine', robots: 'noindex' })
+useSeoMeta({ title: 'Painel | Revenda', robots: 'noindex' })
 </script>
 
 <template>
   <main class="wrap painel">
     <header class="painel-top">
-      <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
+      <NuxtLink to="/" class="wordmark display">Revenda</NuxtLink>
       <div class="painel-top-actions">
         <NuxtLink v-if="data?.admin" class="btn" to="/admin">Admin</NuxtLink>
         <button v-if="data" class="btn" type="button" @click="logout">Sair</button>

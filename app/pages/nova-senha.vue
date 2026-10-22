@@ -30,7 +30,7 @@ async function submit() {
   }
 }
 
-useSeoMeta({ title: 'Senha nova | Vitrine', robots: 'noindex' })
+useSeoMeta({ title: 'Senha nova | Revenda', robots: 'noindex' })
 </script>
 
 <template>

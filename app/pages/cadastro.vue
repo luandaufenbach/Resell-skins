@@ -49,7 +49,7 @@ async function submit() {
 }
 
 useSeoMeta({
-  title: 'Criar minha loja | Vitrine',
+  title: 'Criar minha loja | Revenda',
   description: 'Crie a sua loja de skins a partir do seu inventário público da Steam.',
   robots: 'noindex',
 })

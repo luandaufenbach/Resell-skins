@@ -422,7 +422,7 @@ if (!props.preview) useSeoMeta({
 
     <footer class="wrap store-foot">
       <p v-if="readAt">Inventário lido em {{ readAt }}.</p>
-      <NuxtLink to="/">Conheça a Vitrine</NuxtLink>
+      <NuxtLink to="/">Loja feita com a Revenda</NuxtLink>
     </footer>
 
     <SkinDetail

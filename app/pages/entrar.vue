@@ -25,7 +25,7 @@ async function submit() {
 
 const invalid = computed(() => (code.value === 'LOGIN_FAILED' ? 'true' : undefined))
 
-useSeoMeta({ title: 'Entrar | Vitrine', robots: 'noindex' })
+useSeoMeta({ title: 'Entrar | Revenda', robots: 'noindex' })
 </script>
 
 <template>
@@ -45,7 +45,7 @@ useSeoMeta({ title: 'Entrar | Vitrine', robots: 'noindex' })
       </label>
 
       <label class="field">
-        <span class="field-label">Senha da Vitrine</span>
+        <span class="field-label">Senha da Revenda</span>
         <PasswordInput
           v-model="form.senha"
           required

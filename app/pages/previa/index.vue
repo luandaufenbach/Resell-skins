@@ -64,14 +64,14 @@ const sample = computed(() =>
 )
 
 useSeoMeta({
-  title: 'Veja como fica a sua loja | Vitrine',
+  title: 'Veja como fica a sua loja | Revenda',
   description: 'Cole o link do seu perfil da Steam e veja a sua loja de skins na hora, sem criar conta.',
 })
 </script>
 
 <template>
   <main class="wrap previa">
-    <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
+    <NuxtLink to="/" class="wordmark display">Revenda</NuxtLink>
 
     <div class="previa-layout">
       <div class="previa-body">

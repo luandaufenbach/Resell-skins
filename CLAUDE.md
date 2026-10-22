@@ -1,6 +1,6 @@
-# Vitrine
+# Revenda
 
-Nome provisório. Assinatura mensal para revendedores brasileiros de skins de CS2. O revendedor
+Assinatura mensal para revendedores brasileiros de skins de CS2. O revendedor
 ganha uma loja online gerada a partir do inventário público da Steam, com a marca dele, preços e
 botão de WhatsApp, em `dominio.com/<slug-da-loja>`. Os clientes do revendedor abrem a loja pelo
 celular, vindo de WhatsApp, Instagram e Discord.
@@ -8,6 +8,11 @@ celular, vindo de WhatsApp, Instagram e Discord.
 Foco: coletar o inventário e gerar um catálogo bonito. Não inchar de funcionalidades.
 
 O roteiro está em [docs/fases.md](docs/fases.md).
+
+Até 22/10/2026 o produto se chamava Vitrine. Ficaram com o nome antigo de propósito: os cookies de
+sessão (`vitrine_*`; trocar desloga todo mundo), o prefixo `VTR-` do código de posse (o banco só
+aceita esse), o serviço `vitrine` na Render (endereço `vitrine-6ov4.onrender.com`, até o domínio
+próprio) e o widget do Turnstile. `vitrine` continua reservado como endereço de loja.
 
 ## Forma de trabalhar
 
@@ -35,10 +40,10 @@ Hoje existem `/` (página inicial), `/previa` (formulário), `/previa/<id>` (pr�
 `/esqueci-senha`, `/nova-senha`, `/confirmar`), o `/painel` (abas Loja, Marca, Itens e Preços), o
 `/admin` (lojas e pagamentos, só para os e-mails de `NUXT_ADMIN_EMAILS`) e as lojas em `/<slug>`. A
 estrutura de pastas está no README.
-Para testar o `/admin`, acrescente um e-mail `@vitrine.test` ao `NUXT_ADMIN_EMAILS` do `.env` (e tire
+Para testar o `/admin`, acrescente um e-mail `@revenda.test` ao `NUXT_ADMIN_EMAILS` do `.env` (e tire
 no fim). Pagamentos registrados em lojas de teste entram no total do mês: apague-os antes das lojas.
 Para testar contas sem mandar e-mail, crie a conta pela API de admin do Supabase (`generate_link`)
-com e-mail `@vitrine.test` e abra `/confirmar?token_hash=...`. No fim, apague as contas de teste e
+com e-mail `@revenda.test` e abra `/confirmar?token_hash=...`. No fim, apague as contas de teste e
 as linhas de `testes_usados` que elas criaram: senão o SteamID usado no teste perde o teste grátis.
 
 ## Confiança (regra inegociável)

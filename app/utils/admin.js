@@ -110,9 +110,9 @@ export function chargeMessage(store, config, host) {
   const address = `${host}/${store.slug}`
   const when = store.paidUntil ? formatDate(store.paidUntil) : ''
   const late = store.daysLeft != null && store.daysLeft <= 0
-  const what = store.status === 'teste' ? 'O teste grátis da sua loja na Vitrine' : 'A sua loja na Vitrine'
+  const what = store.status === 'teste' ? 'O teste grátis da sua loja na Revenda' : 'A sua loja na Revenda'
   const opening = late
-    ? `Olá! A sua loja na Vitrine (${address}) está fora do ar desde ${when}.`
+    ? `Olá! A sua loja na Revenda (${address}) está fora do ar desde ${when}.`
     : `Olá! ${what} (${address}) ${store.status === 'teste' ? 'termina' : 'vence'} em ${when}.`
   const plan = store.plan.value
     ? `${formatPlanPrice(store.plan.value)} (plano ${PLAN_LABEL[store.plan.id]?.toLowerCase() ?? store.plan.id})`

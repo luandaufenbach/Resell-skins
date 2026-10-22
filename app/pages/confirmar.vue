@@ -30,7 +30,7 @@ async function confirm() {
   }
 }
 
-useSeoMeta({ title: 'Confirmar e-mail | Vitrine', robots: 'noindex' })
+useSeoMeta({ title: 'Confirmar e-mail | Revenda', robots: 'noindex' })
 </script>
 
 <template>
@@ -39,7 +39,7 @@ useSeoMeta({ title: 'Confirmar e-mail | Vitrine', robots: 'noindex' })
       <p class="lead">Falta um passo para confirmar o e-mail. É com esta senha que você entra no painel.</p>
       <form ref="formEl" class="account-form" novalidate @submit.prevent="confirm">
         <label class="field">
-          <span class="field-label">Senha da Vitrine</span>
+          <span class="field-label">Senha da Revenda</span>
           <PasswordInput
             v-model="password"
             required

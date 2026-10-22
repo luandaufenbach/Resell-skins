@@ -54,7 +54,7 @@ const ownerLink = computed(() => {
   const owner = config.value?.ownerWhatsapp
   if (!owner) return null
   const paid = value.value ? ` de ${formatPlanPrice(value.value)}` : ''
-  const text = `Olá! Fiz o Pix${paid} da minha loja na Vitrine: ${props.host}/${props.store.slug}. Segue o comprovante.`
+  const text = `Olá! Fiz o Pix${paid} da minha loja na Revenda: ${props.host}/${props.store.slug}. Segue o comprovante.`
   return `https://wa.me/${owner}?text=${encodeURIComponent(text)}`
 })
 
@@ -62,8 +62,8 @@ const askLink = computed(() => {
   const owner = config.value?.ownerWhatsapp
   if (!owner) return null
   const text = blocked.value
-    ? `Olá! A minha loja na Vitrine foi suspensa: ${props.host}/${props.store.slug}`
-    : `Olá! Quero pagar a minha loja na Vitrine: ${props.host}/${props.store.slug}`
+    ? `Olá! A minha loja na Revenda foi suspensa: ${props.host}/${props.store.slug}`
+    : `Olá! Quero pagar a minha loja na Revenda: ${props.host}/${props.store.slug}`
   return `https://wa.me/${owner}?text=${encodeURIComponent(text)}`
 })
 </script>

@@ -2,6 +2,7 @@
 
 Uma fase por sessão. Começar com um plano curto e esperar aprovação antes de escrever código.
 As decisões de produto, preço e design estão no [CLAUDE.md](../CLAUDE.md).
+Até 22/10/2026 o produto se chamava Vitrine; o registro das fases abaixo mantém o nome antigo.
 
 Toda fase só está pronta quando, além do critério dela:
 

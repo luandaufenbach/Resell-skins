@@ -1,4 +1,4 @@
-# api-skins (Vitrine)
+# api-skins (Revenda)
 
 Loja de skins de CS2 gerada a partir do inventário público da Steam.
 O revendedor cola o link do perfil e vê na hora uma prévia da loja, com foto, desgaste,

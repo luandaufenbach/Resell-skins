@@ -7,8 +7,9 @@ export const RESERVED_SLUGS = new Set([
   'checkout', 'conta', 'confirmar', 'contato', 'dashboard', 'demo', 'email', 'entrar', 'esqueci-senha',
   'exemplo', 'faq', 'favicon', 'help', 'inventario', 'lgpd', 'login', 'logout', 'loja', 'lojas',
   'nova-senha', 'nuxt', 'og', 'pagamento', 'pagamentos', 'painel', 'perfil', 'pix', 'planos', 'preco',
-  'precos', 'previa', 'previas', 'privacidade', 'public', 'registro', 'robots', 'sair', 'senha',
-  'signup', 'sitemap', 'sobre', 'static', 'status', 'suporte', 'termos', 'usuario', 'vitrine', 'www',
+  'precos', 'previa', 'previas', 'privacidade', 'public', 'registro', 'revenda', 'robots', 'sair',
+  'senha', 'signup', 'sitemap', 'sobre', 'static', 'status', 'suporte', 'termos', 'usuario', 'vitrine',
+  'www',
 ])
 
 const FORMAT = /^[a-z0-9]+(-[a-z0-9]+)*$/

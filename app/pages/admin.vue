@@ -52,13 +52,13 @@ function onPaid(next) {
   refreshPayments()
 }
 
-useSeoMeta({ title: 'Admin | Vitrine', robots: 'noindex' })
+useSeoMeta({ title: 'Admin | Revenda', robots: 'noindex' })
 </script>
 
 <template>
   <main class="wrap admin">
     <header class="admin-top">
-      <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
+      <NuxtLink to="/" class="wordmark display">Revenda</NuxtLink>
       <NuxtLink class="btn" to="/painel">Painel</NuxtLink>
     </header>
 

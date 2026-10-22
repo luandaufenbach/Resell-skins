@@ -20,7 +20,7 @@ useSeoMeta({ title, robots: 'noindex' })
 
 <template>
   <main class="wrap page-error">
-    <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
+    <NuxtLink to="/" class="wordmark display">Revenda</NuxtLink>
     <h1 class="display">{{ title }}</h1>
     <p>{{ body }}</p>
     <button class="btn btn--primary" type="button" @click="clearError({ redirect: '/' })">Ir para o início</button>

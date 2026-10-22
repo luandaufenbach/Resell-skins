@@ -11,7 +11,7 @@ defineProps({
 
 <template>
   <main class="wrap account">
-    <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
+    <NuxtLink to="/" class="wordmark display">Revenda</NuxtLink>
     <div class="account-layout">
       <div class="account-body">
         <h1 class="display account-title">{{ title }}</h1>
