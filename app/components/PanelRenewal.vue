@@ -2,6 +2,7 @@
 // Aviso de vencimento: aparece a partir de 5 dias antes (no teste grátis e no plano pago) e
 // continua quando a loja sai do ar. Na aba Loja, completo: valor do plano da loja, chave Pix do dono
 // para copiar e o WhatsApp dele para mandar o comprovante. Nas outras abas, uma linha que leva até lá.
+// Loja bloqueada pelo admin: diz que foi suspensa e leva ao WhatsApp do dono, sem pedir o Pix.
 const props = defineProps({
   store: { type: Object, required: true },
   pix: { type: String, default: null },
@@ -22,6 +23,7 @@ const ends = computed(() => state.value.ends)
 const daysLeft = computed(() => state.value.daysLeft)
 const closed = computed(() => state.value.closed)
 const show = computed(() => state.value.show)
+const blocked = computed(() => Boolean(props.store.blocked))
 
 const PLAN_LABEL = { mensal: 'plano mensal', trimestral: 'plano trimestral' }
 const value = computed(() => props.store.plan?.value ?? null)
@@ -30,6 +32,7 @@ const planText = computed(() =>
 )
 
 const title = computed(() => {
+  if (blocked.value) return 'Sua loja foi suspensa'
   if (closed.value) return 'Sua loja está fora do ar'
   const what = props.store.trial ? 'O teste grátis termina' : 'O plano vence'
   if (daysLeft.value <= 0) return `${what} hoje`
@@ -39,6 +42,7 @@ const title = computed(() => {
 
 const lead = computed(() => {
   const when = ends.value ? formatDate(ends.value) : ''
+  if (blocked.value) return 'Quem abre o link vê "loja indisponível". Fale com a gente no WhatsApp para saber o motivo e voltar ao ar.'
   if (closed.value) {
     if (props.store.trialUsed) return 'O teste grátis já foi usado com este inventário, este e-mail ou este WhatsApp. Quem abre o link vê "loja indisponível".'
     return `Venceu em ${when}. Quem abre o link vê "loja indisponível" até o pagamento.`
@@ -57,7 +61,9 @@ const ownerLink = computed(() => {
 const askLink = computed(() => {
   const owner = config.value?.ownerWhatsapp
   if (!owner) return null
-  const text = `Olá! Quero pagar a minha loja na Vitrine: ${props.host}/${props.store.slug}`
+  const text = blocked.value
+    ? `Olá! A minha loja na Vitrine foi suspensa: ${props.host}/${props.store.slug}`
+    : `Olá! Quero pagar a minha loja na Vitrine: ${props.host}/${props.store.slug}`
   return `https://wa.me/${owner}?text=${encodeURIComponent(text)}`
 })
 </script>
@@ -65,13 +71,20 @@ const askLink = computed(() => {
 <template>
   <p v-if="show && compact" class="renewal-line" :class="{ 'is-closed': closed }">
     <strong>{{ title }}.</strong>
-    <NuxtLink to="/painel" class="renewal-link">Ver como pagar</NuxtLink>
+    <NuxtLink to="/painel" class="renewal-link">{{ blocked ? 'Ver o que fazer' : 'Ver como pagar' }}</NuxtLink>
   </p>
   <section v-else-if="show" class="renewal" :class="{ 'is-closed': closed }" aria-labelledby="vencimento">
     <h2 id="vencimento" class="renewal-title">{{ title }}</h2>
     <p class="muted">{{ lead }}</p>
 
-    <template v-if="pix">
+    <template v-if="blocked">
+      <a v-if="askLink" class="btn btn--primary" :href="askLink" target="_blank" rel="noopener">
+        <AppIcon name="chat" />
+        Chamar no WhatsApp
+      </a>
+    </template>
+
+    <template v-else-if="pix">
       <p>
         Para {{ closed ? 'voltar ao ar' : 'continuar no ar' }}, faça um Pix<template v-if="planText">
           de <strong>{{ planText }}</strong></template> para a chave abaixo e mande o comprovante no WhatsApp.

@@ -67,7 +67,10 @@ useSeoMeta({ title: 'Painel | Vitrine', robots: 'noindex' })
   <main class="wrap painel">
     <header class="painel-top">
       <NuxtLink to="/" class="wordmark display">Vitrine</NuxtLink>
-      <button v-if="data" class="btn" type="button" @click="logout">Sair</button>
+      <div class="painel-top-actions">
+        <NuxtLink v-if="data?.admin" class="btn" to="/admin">Admin</NuxtLink>
+        <button v-if="data" class="btn" type="button" @click="logout">Sair</button>
+      </div>
     </header>
 
     <!-- Banco fora do ar -->
@@ -81,6 +84,7 @@ useSeoMeta({ title: 'Painel | Vitrine', robots: 'noindex' })
     <section v-else-if="data && !store" class="painel-body">
       <h1 class="display painel-title">Confira os dados da loja</h1>
       <p class="lead">Estes são os dados do cadastro. Corrija o que estiver errado antes de criar a loja.</p>
+      <TrustNote />
       <form ref="createFormEl" class="painel-form" novalidate @submit.prevent="createStore">
         <StoreFields :form="storeForm" :problem="createProblem" />
         <FormProblem v-if="createProblem && !createProblem.field" :problem="createProblem" />
@@ -138,6 +142,11 @@ useSeoMeta({ title: 'Painel | Vitrine', robots: 'noindex' })
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.painel-top-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .painel-body,

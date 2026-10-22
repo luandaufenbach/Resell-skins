@@ -25,6 +25,8 @@ Abra http://localhost:3000.
 - `/cadastro`, `/entrar`, `/esqueci-senha`, `/nova-senha`, `/confirmar` conta do revendedor
 - `/painel` painel do revendedor em abas: Loja (situação, verificação, "Atualizar inventário"),
   Marca (`?aba=marca`), Itens (`?aba=itens`) e Preços (`?aba=precos`), com o aviso de vencimento
+- `/admin` administração (só os e-mails de `NUXT_ADMIN_EMAILS`): lojas, cobrança e pagamentos
+  (`?aba=pagamentos`)
 - `/<slug>` loja do revendedor, pública depois da verificação e enquanto estiver paga
 
 Para testar com um inventário de verdade, ele precisa estar público
@@ -41,6 +43,10 @@ app/
   pages/[slug].vue           loja do revendedor (ou "loja indisponível")
   pages/cadastro.vue, entrar.vue, esqueci-senha.vue, nova-senha.vue, confirmar.vue  conta
   pages/painel.vue           painel do revendedor, em abas (?aba=marca, itens, precos)
+  pages/admin.vue            administração, em abas (Lojas e ?aba=pagamentos)
+  components/AdminStores.vue lista de lojas do admin: dias até o vencimento, filtros, busca e "Cobrar"
+  components/AdminStoreDetail.vue  detalhe da loja: pagamento, verificar, fundador, bloqueio, observação
+  components/AdminPayments.vue pagamentos do mês com o total
   components/AccountPage.vue moldura das telas de conta (formulário e, no computador, a vitrine)
   components/StoreWindow.vue vitrine de exemplo ao lado dos formulários, com o endereço da loja
   components/StoreFields.vue Steam, WhatsApp e endereço (cadastro e criação da loja no painel)
@@ -64,6 +70,7 @@ app/
   utils/account.js           mensagens das telas de conta, formatação de telefone e datas
   utils/theme.js             cores do tema: fundo escuro/claro, cor de destaque, contraste AA
   utils/panel.js             valores em reais nos campos do painel e cores tiradas da logo
+  utils/admin.js             situação e vencimento das lojas, valor do plano, mensagem de cobrança
   composables/useTheme.js    aplica o tema no <html> (ou só num pedaço, na demonstração)
   assets/css/main.css        fontes, tamanhos, botões e campos
 shared/utils/slug.js         endereço da loja: formato e nomes reservados (site e servidor)
@@ -79,6 +86,8 @@ server/
                                    imagem, endereço, preços e itens
   api/loja/[slug].get.js           loja pública, só do banco
   api/eventos.post.js              visitas, skins abertas e cliques no WhatsApp
+  api/admin/*                      admin: lojas, pagamentos e as ações de cada loja
+  middleware/admin.js              404 em toda página /admin e rota /api/admin para quem não é admin
   middleware/limit.js              limite de consultas por IP
   middleware/sessao.js             renova a sessão antes da página renderizar
   middleware/redirecionar.js       /loja/demo -> /demo
@@ -91,6 +100,7 @@ server/
   utils/account.js                 e-mail, senha e erros da Auth do Supabase
   utils/stores.js                  lojas: criar, código de posse, inventário, leitura pública
   utils/panel.js                   o que o painel pode gravar (marca, preços, itens), conferido
+  utils/admin.js                   quem é admin (NUXT_ADMIN_EMAILS), lojas e configuração do admin
   utils/images.js                  logo e banner: confere, reconverte para WebP e grava no Storage
   utils/turnstile.js               confere o Turnstile na Cloudflare
   utils/limit.js                   contagem do limite por IP e por chave
@@ -148,7 +158,8 @@ antes com o e-mail de outra pessoa ficaria com a conta.
   e 5 falhas por e-mail a cada 15 minutos (a senha certa não gasta tentativa).
 - `GET /api/painel` e `POST /api/painel/{loja,codigo,verificar,atualizar}`: `loja` cria a loja com
   os dados conferidos; verificar procura o código `VTR-XXXX` no XML público do perfil do SteamID da
-  loja (5 tentativas a cada 10 minutos); atualizar relê a Steam no máximo a cada 10 minutos (3
+  loja (5 tentativas a cada 10 minutos) e grava pelo id da loja, só se o SteamID e o código ainda
+  forem os conferidos (senão 409 `STORE_CHANGED`); atualizar relê a Steam no máximo a cada 10 minutos (3
   tentativas, contando as que falham) e grava o que entrou e o que saiu.
 - `GET /api/loja/<slug>`: loja pública, só do banco, com a marca (`brand`) e o desconto da loja.
   Itens ocultos e o custo dos itens não saem. 404 `STORE_NOT_FOUND`; 403 `STORE_UNAVAILABLE` quando
@@ -185,9 +196,47 @@ pontuação e (na frase) emoji, e não podem lembrar Steam nem Valve.
 - `POST /api/eventos { loja, tipo, item }`: `visita`, `item` ou `whatsapp`, uma vez por visitante a
   cada 30 minutos, só de itens que existem na loja e no máximo 40 por visitante e loja nessa janela.
 
-Verificação manual pelo admin (até o `/admin` da fase 6), no SQL Editor do Supabase:
-`select public.verificar_loja('<slug>');`. Ela começa o teste de 7 dias, a menos que o SteamID, o
-e-mail ou o WhatsApp já tenham usado um.
+### Admin
+
+Admin é quem entra no site (o mesmo `/entrar`) com um e-mail da lista `NUXT_ADMIN_EMAILS`, separada
+por vírgula, com o e-mail confirmado; não há tabela de admins. O `server/middleware/admin.js`
+confere toda página `/admin` e rota `/api/admin` (com o caminho decodificado, sem "." e "..", sem
+diferença de maiúsculas) e responde 404 para qualquer outra conta ou sem sessão, e cada rota confere
+de novo. Gravação vinda de outro site recebe 403, e cada admin faz no máximo 60 gravações a cada 10
+minutos. Toda ação fica na tabela `registro_admin` (quem, quando, qual loja, o quê), para ver no
+Table Editor do Supabase. `/admin` e `/painel` não abrem dentro de iframe. O painel mostra o botão
+"Admin" só para essas contas.
+
+Ponha na lista só e-mails que já têm conta confirmada no site, e mantenha no Supabase
+(Authentication > Sign In / Providers e Emails) "Confirm email" e "Secure email change" ligados e
+nenhum outro jeito de entrar (Google, link mágico, telefone): o admin vale pelo e-mail confirmado.
+
+- `GET /api/admin/lojas`: todas as lojas (`public.admin_lojas`) com situação (`pendente`,
+  `bloqueada`, `vencida`, `teste` ou `paga`), vencimento, plano e valor, fundador, verificação,
+  última leitura do inventário, itens, visitas e cliques no WhatsApp em 30 dias, pagamentos e a
+  observação; mais `config` com os planos, as vagas de fundador, a chave Pix e o WhatsApp do dono.
+  Teste é a loja no ar sem nenhum pagamento registrado.
+- `GET /api/admin/pagamentos?mes=AAAA-MM` (padrão: o mês atual, no horário de Brasília) ou
+  `?loja=<id>`: pagamentos do mais novo ao mais antigo e `total`, a soma das mesmas linhas.
+- `POST /api/admin/lojas/<id>/pagamento { meses, valor, observacao? }`: `meses` 1 ou 3, valor
+  recebido em reais. `public.registrar_pagamento` soma o período a partir do vencimento ou de hoje,
+  o que for maior, tira o bloqueio, põe a loja no plano do período (1 mês = mensal, 3 = trimestral;
+  na troca, o valor passa a ser o do plano na configuração, com o desconto de fundador) e guarda o
+  e-mail de quem registrou. Loja não verificada: 400 `NOT_VERIFIED`. Não há como desfazer pelo site.
+- `POST .../bloqueio { bloqueada }`: tira a loja do ar na hora, mesmo paga ("loja indisponível"); o
+  painel do revendedor diz que a loja foi suspensa, sem a chave Pix.
+- `POST .../fundador { fundador }`: o valor da loja vira o do plano com ou sem o desconto de
+  fundador; 409 `FOUNDERS_FULL` quando as vagas da configuração acabaram.
+- `POST .../verificar { steamid }`: verificação manual da posse (`public.verificar_loja_id`), que
+  começa o teste de 7 dias, a menos que o SteamID, o e-mail ou o WhatsApp já tenham usado um. Vai
+  junto o SteamID que o admin viu: se a loja agora tem outro, 409 `STORE_CHANGED`. Continua valendo
+  também `select public.verificar_loja('<slug>');` no SQL Editor do Supabase.
+- `POST .../observacao { texto }`: nota do admin (até 1000 caracteres, na tabela `observacoes`, que
+  o revendedor não lê). Vazia, apaga.
+
+"Cobrar no WhatsApp" abre a conversa com o número da loja e uma mensagem pronta: quando vence ou
+venceu, o valor do plano da loja, a chave Pix do dono (`configuracao.pix_dono`) e o pedido do
+comprovante.
 
 Todo dia, o banco apaga contas que não confirmaram o e-mail e lojas não verificadas com mais de 7
 dias (`interno.limpar_cadastros`, pg_cron): o endereço volta a ficar livre.
@@ -222,8 +271,9 @@ O site roda na Render, configurado pelo `render.yaml` (serviço web Node na regi
 mesma do Supabase). Cada push no `main` publica sozinho. Variáveis no painel da Render:
 `NUXT_SUPABASE_URL`, `NUXT_SUPABASE_SECRET_KEY`, `NUXT_SUPABASE_PUBLISHABLE_KEY`,
 `NUXT_PUBLIC_SITE_URL` (endereço do site, para a imagem de compartilhamento e o link da prévia),
-`NUXT_PUBLIC_TURNSTILE_SITE_KEY` e `NUXT_TURNSTILE_SECRET_KEY`. Sem a chave do Turnstile, cadastro
-e prévia respondem "tente de novo em alguns minutos". `NODE_VERSION` e `NUXT_IP_HEADER` (cabeçalho
+`NUXT_PUBLIC_TURNSTILE_SITE_KEY`, `NUXT_TURNSTILE_SECRET_KEY` e `NUXT_ADMIN_EMAILS` (e-mails de
+quem abre o `/admin`). Sem a chave do Turnstile, cadastro e prévia respondem "tente de novo em
+alguns minutos"; sem `NUXT_ADMIN_EMAILS`, ninguém abre o `/admin`. `NODE_VERSION` e `NUXT_IP_HEADER` (cabeçalho
 com o IP do visitante, para o limite por IP) já vêm do `render.yaml`. O limite, os eventos já
 contados e o cache (com teto de 64 MB) ficam na memória do servidor: com mais de uma instância,
 cada uma contaria separado. As variáveis de banco direto

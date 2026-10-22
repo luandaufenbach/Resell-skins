@@ -293,13 +293,67 @@ Decisões (o dono aprovou as recomendações em 20/10/2026):
 
 ## Fase 6: admin
 
-- [ ] Lista de lojas: status, teste/pago até, plano e valor, fundador ou não, verificada ou não,
-      última atualização, número de itens, visitas e cliques no WhatsApp em 30 dias.
-- [ ] Ações: registrar pagamento (período de 1 ou 3 meses e valor recebido), bloquear/desbloquear
-      manualmente, marcar como fundador, verificar loja, abrir loja, observações.
-- [ ] Botão "Cobrar no WhatsApp" com a mensagem pronta.
-- [ ] Histórico de pagamentos (data, valor, período, observação) e total recebido no mês.
-- [ ] Rodar o security-reviewer.
+Plano aprovado pelo dono em 21/10/2026:
+
+- Admin: e-mails em `NUXT_ADMIN_EMAILS` (no `.env` e na Render), conferidos no servidor em toda
+  página `/admin` e rota `/api/admin`, com sessão e e-mail confirmado. Entra pelo `/entrar` de
+  sempre; o painel mostra o botão "Admin" só para quem está na lista.
+- Banco: `lojas.fundador` e `lojas.bloqueada_em`, observações numa tabela à parte (o revendedor lê a
+  própria linha de `lojas`), `registrar_pagamento` numa transação e `admin_lojas` com o e-mail do
+  dono, itens, visitas e cliques em 30 dias.
+- Tela `/admin` em abas: Lojas (busca, filtros que também são o resumo, lista da mais urgente para a
+  menos, detalhe com as ações) e Pagamentos (por mês, com o total).
+
+Decisões (o dono aprovou as recomendações em 21/10/2026):
+
+1. Pagamento de 3 meses numa loja mensal passa a loja para o trimestral (e o contrário), com o
+   valor do plano na configuração e o desconto de fundador, se for: o aviso de vencimento mostra o
+   valor certo.
+2. Quem não é admin recebe 404 (e não 403), para não revelar que o `/admin` existe.
+3. Ficam para "Depois": desfazer um pagamento lançado errado, tirar o fundador sozinho de quem
+   cancelou e avisar o admin quando o revendedor troca o WhatsApp ou o endereço.
+
+- [x] Lista de lojas: status, teste/pago até, plano e valor, fundador ou não, verificada ou não,
+      última atualização, número de itens, visitas e cliques no WhatsApp em 30 dias. O número
+      grande de cada linha é quantos dias faltam para o vencimento (ou quantos passaram), com a
+      faixa da esquerda na cor da urgência; o filtro "Cobrar" junta as vencidas e as que vencem em
+      até 5 dias.
+- [x] Ações: registrar pagamento (período de 1 ou 3 meses e valor recebido), bloquear/desbloquear
+      manualmente, marcar como fundador, verificar loja, abrir loja, observações. Registrar
+      pagamento e bloquear pedem confirmação. Loja bloqueada mostra "loja indisponível", e o painel
+      do revendedor diz que ela foi suspensa, com o WhatsApp do dono e sem a chave Pix.
+- [x] Botão "Cobrar no WhatsApp" com a mensagem pronta (vencimento, valor do plano da loja, chave
+      Pix do dono e pedido do comprovante), na lista e no detalhe.
+- [x] Histórico de pagamentos (data, valor, período, observação) e total recebido no mês. O total é a
+      soma das mesmas linhas da lista, no horário de Brasília. Cada pagamento guarda o e-mail do
+      admin que registrou.
+- [x] Rodar o security-reviewer (duas rodadas) e o design-reviewer, pela tela nova.
+      Corrigidos da segurança:
+      - Verificação de posse pelo id da loja, conferindo o SteamID e o código. Antes, ela gravava
+        pelo endereço, e quem tivesse duas lojas não verificadas podia trocar o endereço entre elas
+        durante a leitura do perfil e verificar o inventário de outra pessoa. Vinha da fase 4.
+      - Registro de toda ação do admin (`registro_admin`).
+      - Limite de 60 gravações a cada 10 minutos por admin.
+      - Origem conferida também dentro de cada rota.
+      - Caminhos com "." e ".." e com outras maiúsculas.
+      - Painel e admin fora de iframe.
+      - Nome do perfil Steam sem caracteres que invertem o texto.
+      - Ajustes do Supabase Auth documentados no README.
+      Corrigidos do design:
+      - Borda dos campos com 3:1 também sobre a superfície (vale para o site todo).
+      - Cor de prazo no tema (`--warn`).
+      - Anel de foco no chip ativo.
+      - Caixa de observação na fonte Saira.
+      - Frase de confiança no formulário de criar loja do painel (vinha da fase 4).
+      - Loja bloqueada sem "Cobrar".
+      - Blocos alinhados no celular.
+      - Coluna Situação em 1024px.
+      - Dados do detalhe no celular.
+      - Contorno dos botões no detalhe.
+      - Setas e mês vazio em Pagamentos.
+      - Áreas de toque de 24px.
+      - "Ver todas" no celular.
+      O que ficou para o dono decidir está em "Depois".
 
 **Pronto quando:**
 
@@ -360,3 +414,18 @@ Ideias que surgirem durante as fases e ficaram fora do escopo.
     continuam reservados. Reservar também o atual ao apagar.
   - Arquivo acima de 8 MB recebe 413 antes de ser lido, e o navegador mostra erro de rede em vez
     da mensagem (o painel confere o tamanho antes de enviar).
+- Admin (fase 6), deixado para depois:
+  - Desfazer um pagamento lançado errado (volta o vencimento e sai do total do mês). Por enquanto,
+    corrigir no Table Editor do Supabase: apagar a linha em `pagamentos` e acertar `lojas.pago_ate`.
+  - Fundador que cancela e volta paga o valor cheio: hoje o admin desmarca à mão. Tirar sozinho
+    quando a loja ficar vencida por muito tempo.
+  - Avisar o admin quando o revendedor troca o WhatsApp ou o endereço da loja (pendente da fase 5).
+  - A lista do admin traz todas as lojas de uma vez (até 1000, o teto da API do Supabase).
+    Paginar quando passar de algumas centenas.
+- Revisão de segurança da fase 6, à espera da decisão do dono:
+  - Segundo fator (TOTP do Supabase) para entrar no admin: hoje basta a senha. Com ele,
+    `requireAdmin` confere `aal2`.
+  - "Sair de todos os aparelhos": hoje "Sair" encerra só a sessão do navegador onde foi clicado, e
+    uma sessão roubada continua valendo até 30 dias.
+  - Eventos (visitas e cliques) de uma loja recém-bloqueada ainda contam por até 5 minutos (cache da
+    loja em `eventos.post.js`). A loja pública sai do ar na hora.

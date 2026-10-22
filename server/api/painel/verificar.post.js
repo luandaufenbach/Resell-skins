@@ -1,7 +1,8 @@
 // POST /api/painel/verificar
 // Prova de posse do inventário sem login da Steam: o código da loja tem que aparecer no perfil
 // público do SteamID salvo na loja (resumo, nome ou nome real). Confirmado, a loja fica pública e
-// o teste de 7 dias começa (public.verificar_loja).
+// o teste de 7 dias começa (public.verificar_loja_id). A gravação é pelo id da loja, com o SteamID
+// e o código conferidos aqui: se a loja mudou enquanto o perfil era lido, 409 STORE_CHANGED.
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event)
   // Cada tentativa lê o perfil na Steam, que conta na cota do site inteiro.
@@ -15,17 +16,13 @@ export default defineEventHandler(async (event) => {
   if (!(await profileHasCode(store.steamid, store.codigo))) throw invalid('CODE_NOT_FOUND')
 
   try {
-    await supabase('/rest/v1/rpc/verificar_loja', {
+    await supabase('/rest/v1/rpc/verificar_loja_id', {
       method: 'POST',
-      body: { p_slug: store.slug, p_por: 'perfil' },
+      body: { p_loja: store.id, p_por: 'perfil', p_steamid: store.steamid, p_codigo: store.codigo },
       retry: 0,
     })
   } catch (error) {
-    // Outra loja verificada já tem este SteamID (índice único).
-    if (supabaseError(error).code === '23505') {
-      throw createError({ statusCode: 409, statusMessage: 'Já existe', data: { code: 'STEAM_TAKEN' } })
-    }
-    throw unavailable('lojas', error)
+    throw verifyError(error, 'lojas')
   }
   return { store: panelStore(await ownStore(session)) }
 })

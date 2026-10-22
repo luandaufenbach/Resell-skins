@@ -18,6 +18,7 @@ const BASES = {
     stattrak: '#cf6a32',
     souvenir: '#ffd700',
     alert: '#ff9a8a',
+    warn: '#e4ae39',
     backdrop: 'rgb(12 15 20 / 0.72)',
     accent: '#eef2f6',
     accentInk: '#1d232c',
@@ -38,6 +39,7 @@ const BASES = {
     stattrak: '#cf6a32',
     souvenir: '#ffd700',
     alert: '#c2402f',
+    warn: '#e4ae39',
     backdrop: 'rgb(29 35 44 / 0.5)',
     accent: '#1d232c',
     accentInk: '#f4f6f9',
@@ -73,8 +75,11 @@ function createTheme(mode, accent) {
   t.alert = readableColor(t.alert, grounds)
   // Foco, borda do chip ativo e marcador do float: 3:1 contra o que estiver em volta.
   t.accentEdge = readableColor(t.accent, grounds, 3)
-  // Borda dos campos de texto: é ela que mostra onde o campo está, então 3:1 também.
-  t.fieldLine = readableColor(t.line, [t.bg, t.stage], 3)
+  // Borda dos campos de texto: é ela que mostra onde o campo está, então 3:1 também (inclusive
+  // nos campos sobre a superfície, como na edição do item e no admin).
+  t.fieldLine = readableColor(t.line, grounds, 3)
+  // Prazo perto do fim (faixa das lojas que vencem em breve, no admin): 3:1, não é texto.
+  t.warn = readableColor(t.warn, grounds, 3)
   // Texto na cor de destaque (ex.: o "−30%" do preço): 4,5:1.
   t.accentText = readableColor(t.accent, grounds)
   return t

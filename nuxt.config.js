@@ -28,6 +28,9 @@ export default defineNuxtConfig({
     // Cabeçalho com o IP do visitante, quando o site roda atrás de um proxy (a hospedagem).
     // Usado no limite de consultas por IP. NUXT_IP_HEADER no .env.
     ipHeader: '',
+    // E-mails de quem abre o /admin, separados por vírgula. Conferido no servidor em toda página
+    // /admin e rota /api/admin. NUXT_ADMIN_EMAILS no .env.
+    adminEmails: '',
     public: {
       // Endereço do site, para links absolutos (ex.: https://dominio.com). NUXT_PUBLIC_SITE_URL no .env.
       siteUrl: '',
@@ -61,6 +64,11 @@ export default defineNuxtConfig({
     '/esqueci-senha': { headers: { 'X-Robots-Tag': 'noindex' } },
     '/nova-senha': { headers: { 'X-Robots-Tag': 'noindex' } },
     '/confirmar': { headers: { 'X-Robots-Tag': 'noindex' } },
+    // Painel e admin também ganham cabeçalhos contra iframe, com qualquer maiúscula, no
+    // server/middleware/admin.js.
     '/painel': { headers: { 'X-Robots-Tag': 'noindex' } },
+    '/admin': { headers: { 'X-Robots-Tag': 'noindex', 'Cache-Control': 'no-store' } },
+    '/admin/**': { headers: { 'X-Robots-Tag': 'noindex', 'Cache-Control': 'no-store' } },
+    '/api/admin/**': { headers: { 'Cache-Control': 'no-store' } },
   },
 })

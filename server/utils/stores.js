@@ -11,7 +11,7 @@ const LOTE = 1000
 
 // Colunas que a loja pública usa: nada de código, e-mail, plano ou pagamento.
 const PUBLIC_COLUMNS = [
-  'id,slug,steamid,whatsapp,nome,avatar,verificada_em,pago_ate,inventario_em,alterada_em',
+  'id,slug,steamid,whatsapp,nome,avatar,verificada_em,pago_ate,bloqueada_em,inventario_em,alterada_em',
   'nome_loja,frase,redes,logo,banner,banner_x,banner_y,cor,fundo,desconto,arredondamento',
 ].join(',')
 
@@ -170,6 +170,19 @@ export async function changeSlug(storeId, slug) {
 }
 
 /**
+ * Erro da verificação (public.verificar_loja_id), para o painel e para o admin: outra loja
+ * verificada já tem o SteamID (índice único) ou a loja mudou enquanto era conferida.
+ */
+export function verifyError(error, scope) {
+  const { code } = supabaseError(error)
+  if (code === '23505') return createError({ statusCode: 409, statusMessage: 'Já existe', data: { code: 'STEAM_TAKEN' } })
+  if (code === 'P0001' && error?.data?.hint === 'STORE_CHANGED') {
+    return createError({ statusCode: 409, statusMessage: 'A loja mudou', data: { code: 'STORE_CHANGED' } })
+  }
+  return unavailable(scope, error)
+}
+
+/**
  * Loja pela URL, só com as colunas públicas. null se não existe; { moved } quando o endereço é
  * antigo e ainda redireciona para o atual.
  */
@@ -236,9 +249,9 @@ export function storeBrand(store) {
   }
 }
 
-/** No ar: verificada e com o pagamento (ou o teste) em dia. */
+/** No ar: verificada, sem bloqueio do admin e com o pagamento (ou o teste) em dia. */
 export function isOpen(store) {
-  return Boolean(store.verificada_em) && Date.parse(store.pago_ate) > Date.now()
+  return Boolean(store.verificada_em) && !store.bloqueada_em && Date.parse(store.pago_ate) > Date.now()
 }
 
 /**
@@ -310,6 +323,8 @@ export function panelStore(store) {
     codeExpiresAt: verified ? null : store.codigo_expira_em,
     paidUntil: store.pago_ate,
     open: isOpen(store),
+    // Bloqueada pelo admin: o painel diz que a loja foi suspensa, em vez de pedir o Pix.
+    blocked: Boolean(store.bloqueada_em),
     trial: verified && !paid,
     // Sem teste, verificar_loja grava pago_ate igual à hora da verificação: o SteamID, o e-mail ou
     // o WhatsApp já tinha usado o teste.

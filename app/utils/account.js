@@ -50,6 +50,10 @@ const MESSAGES = {
     body: 'Confira se salvou o perfil na Steam com o código no resumo ou no nome. A Steam pode levar um minuto para mostrar a mudança.',
   },
   CODE_EXPIRED: { title: 'O código venceu', body: 'Gere um código novo e cole no perfil.' },
+  STORE_CHANGED: {
+    title: 'A loja mudou durante a verificação',
+    body: 'O endereço, o inventário ou o código mudou enquanto líamos o seu perfil. Recarregue a página e verifique de novo.',
+  },
   TOO_SOON: {
     title: 'O inventário foi lido há pouco',
     body: 'Dá para atualizar de novo 10 minutos depois da última leitura.',

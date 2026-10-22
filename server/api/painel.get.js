@@ -2,20 +2,23 @@
 // Conta e loja de quem está logado. Sem loja ainda, `draft` traz Steam, WhatsApp e endereço do
 // cadastro para o formulário de criar a loja. `pix` é a chave Pix do dono, para o aviso de
 // vencimento: só sai quando o aviso aparece (loja verificada, a 5 dias ou menos do vencimento ou
-// fora do ar).
+// fora do ar), e nunca para loja bloqueada pelo admin, que só mostra o WhatsApp do dono. `admin` diz
+// se a conta abre o /admin, para o painel mostrar o atalho.
 const WARN = 5 * 24 * 60 * 60 * 1000
 
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event)
   const store = await ownStore(session)
   const panel = store ? panelStore(store) : null
-  const renewal = panel?.verified && (!panel.open || Date.parse(panel.paidUntil) - Date.now() <= WARN)
+  const renewal =
+    panel?.verified && !panel.blocked && (!panel.open || Date.parse(panel.paidUntil) - Date.now() <= WARN)
 
   return {
     email: session.user.email,
     store: panel,
     draft: store ? null : storeDraft(session),
     pix: renewal ? await ownerPix() : null,
+    admin: isAdminEmail(session.user.email),
   }
 })
 
