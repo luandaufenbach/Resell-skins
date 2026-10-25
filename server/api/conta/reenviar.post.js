@@ -9,12 +9,13 @@ export default defineEventHandler(async (event) => {
   if (!email) throw invalid('INVALID_EMAIL')
   rateLimitKey(event, 'reenviar-email', email, 3, 60 * 60)
 
-  try {
-    await supabaseAs(null, '/auth/v1/resend', { method: 'POST', body: { type: 'signup', email } })
-  } catch (error) {
-    const { status } = supabaseError(error)
-    if (status === 429) throw authError(error)
-    console.error('[conta] reenviar confirmação:', status, error.message)
-  }
+  // A resposta não espera a Auth, que só demora ou dá 429 quando há conta não confirmada. Qualquer
+  // erro fica só no log; o limite por e-mail acima segura as repetições.
+  event.waitUntil(
+    supabaseAs(null, '/auth/v1/resend', { method: 'POST', body: { type: 'signup', email } }).catch((error) => {
+      const { status, code } = supabaseError(error)
+      console.error('[conta] reenviar confirmação:', status, code ?? error.message)
+    }),
+  )
   return { ok: true }
 })

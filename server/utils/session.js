@@ -45,7 +45,10 @@ export function setPendingSignup(event, { id, email }, maxAge = SIGNUP_MAX_AGE) 
   setCookie(event, SIGNUP, Buffer.concat([iv, cipher.getAuthTag(), data]).toString('base64url'), cookieOptions(event, maxAge))
 }
 
-/** { id, email, ate } do cadastro em andamento neste navegador; null sem cookie, vencido ou adulterado. */
+/**
+ * { id, email, ate, ref } do cadastro em andamento neste navegador; null sem cookie, vencido ou
+ * adulterado. `ref` identifica o cookie (muda a cada gravação) sem dizer nada da conta.
+ */
 export function pendingSignup(event) {
   const raw = Buffer.from(String(getCookie(event, SIGNUP) ?? ''), 'base64url')
   if (raw.length <= 28) return null
@@ -55,7 +58,7 @@ export function pendingSignup(event) {
     const text = Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString('utf8')
     const { id, email, ate } = JSON.parse(text)
     const valid = ate > Date.now() && /^[0-9a-f-]{36}$/i.test(id) && typeof email === 'string'
-    return valid ? { id, email, ate } : null
+    return valid ? { id, email, ate, ref: raw.subarray(0, 12).toString('hex') } : null
   } catch {
     return null
   }

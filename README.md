@@ -155,15 +155,18 @@ antes com o e-mail de outra pessoa ficaria com a conta.
   inventário (público e sem loja verificada) e cria a conta com uma senha provisória que ninguém
   conhece. `POST /api/conta/confirmar { token_hash, senha }` confirma o e-mail e grava a senha.
 - `GET /api/conta/cadastro`: cadastro em andamento neste navegador, `{ email, confirmed }`. O
-  cadastro grava o cookie `vitrine_cadastro` (24h; 1h depois de confirmado) com o id e o e-mail da
-  conta, cifrados com uma chave tirada da chave secreta do Supabase (o id não pode ser lido: o da
-  Auth para e-mail que já tem conta muda a cada cadastro); a tela "Confira seu e-mail" pergunta a cada 5 segundos e, quando o e-mail foi
-  confirmado em outro aparelho, pede a senha criada lá. Não entra sozinha: quem começasse um
+  cadastro grava sempre o cookie `vitrine_cadastro` (24h; 1h depois de confirmado) com o id e o
+  e-mail da conta (id inventado quando a Auth responde 429), cifrados com uma chave tirada da chave
+  secreta do Supabase (o id não pode ser lido: o da Auth para e-mail que já tem conta muda a cada
+  cadastro); a tela "Confira seu e-mail" pergunta a cada 5 segundos (até 240 vezes em 15 minutos
+  por cookie) e, quando o e-mail foi confirmado em outro aparelho, pede a senha criada lá. Não entra sozinha: quem começasse um
   cadastro com o e-mail de outra pessoa ganharia a conta quando ela confirmasse. Só responde sobre a
   conta deste navegador. `DELETE` esquece o cadastro ("Usar outro e-mail"); abrir a sessão também.
 - `POST /api/conta/entrar`, `/sair`, `/recuperar`, `/nova-senha`, `/reenviar`. Cadastro,
-  recuperação e reenvio respondem igual com ou sem conta para o e-mail. Login: 10 tentativas por IP
-  e 5 falhas por e-mail a cada 15 minutos (a senha certa não gasta tentativa).
+  recuperação e reenvio respondem igual com ou sem conta para o e-mail, inclusive no tempo e quando a
+  Auth limita os envios (429): recuperação e reenvio não esperam a Auth, e o cadastro espera no
+  mínimo 3 s por ela (o log avisa quando passa). Login: 10 tentativas por IP e 5 falhas por e-mail a
+  cada 15 minutos (a senha certa não gasta tentativa).
 - `GET /api/painel` e `POST /api/painel/{loja,codigo,verificar,atualizar}`: `loja` cria a loja com
   os dados conferidos; verificar procura o código `VTR-XXXX` no XML público do perfil do SteamID da
   loja (5 tentativas a cada 10 minutos) e grava pelo id da loja, só se o SteamID e o código ainda

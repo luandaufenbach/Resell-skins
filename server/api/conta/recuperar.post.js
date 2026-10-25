@@ -8,13 +8,13 @@ export default defineEventHandler(async (event) => {
   if (!email) throw invalid('INVALID_EMAIL')
   rateLimitKey(event, 'recuperar-email', email, 3, 60 * 60)
 
-  try {
-    await supabaseAs(null, '/auth/v1/recover', { method: 'POST', body: { email } })
-  } catch (error) {
-    const { status } = supabaseError(error)
-    if (status === 429) throw authError(error)
-    // Qualquer outro erro some da resposta: a tela diria se o e-mail existe.
-    console.error('[conta] recuperar senha:', status, error.message)
-  }
+  // A resposta não espera a Auth, que só demora ou dá 429 quando o e-mail tem conta. Qualquer erro
+  // fica só no log; o limite por e-mail acima segura as repetições.
+  event.waitUntil(
+    supabaseAs(null, '/auth/v1/recover', { method: 'POST', body: { email } }).catch((error) => {
+      const { status, code } = supabaseError(error)
+      console.error('[conta] recuperar senha:', status, code ?? error.message)
+    }),
+  )
   return { ok: true }
 })

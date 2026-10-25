@@ -1,5 +1,23 @@
 // Conta do revendedor na Auth do Supabase (e-mail e senha). As respostas não dizem se um e-mail
-// já tem conta: cadastro e recuperação de senha respondem igual nos dois casos.
+// já tem conta: cadastro, recuperação de senha e reenvio da confirmação respondem igual nos dois
+// casos, inclusive no tempo. A Auth só manda e-mail (e só aí demora ou dá 429, pelo intervalo
+// mínimo entre e-mails) quando há conta, ou, no cadastro, quando não há conta confirmada.
+
+/**
+ * Espera `promise` e no mínimo `ms` milissegundos, dê certo ou dê erro: a resposta sai no mesmo
+ * tempo com ou sem envio de e-mail.
+ */
+export async function atLeast(ms, promise) {
+  const started = Date.now()
+  try {
+    return await promise
+  } finally {
+    const elapsed = Date.now() - started
+    if (elapsed < ms) await new Promise((resolve) => setTimeout(resolve, ms - elapsed))
+    // Passou do mínimo: o tempo volta a denunciar. Fica no log para ajustar o valor.
+    else console.warn(`[conta] a Auth levou ${elapsed} ms, acima do mínimo de ${ms} ms`)
+  }
+}
 
 /** E-mail em minúsculas e sem espaços, ou null se não parece um e-mail. */
 export function normalizeEmail(value) {

@@ -441,10 +441,25 @@ Ideias que surgirem durante as fases e ficaram fora do escopo.
   - Eventos (visitas e cliques) de uma loja recém-bloqueada ainda contam por até 5 minutos (cache da
     loja em `eventos.post.js`). A loja pública sai do ar na hora.
 - Cadastro confirmado em outro aparelho (25/10/2026), deixado para depois:
-  - Já existia: o limite de e-mails da Auth (60 s entre envios) só vale para e-mail com conta, e o
-    429 chega à tela em `/recuperar`, `/reenviar` e no cadastro. Pedindo duas vezes seguidas, dá
-    para saber se um e-mail tem conta (o tempo de resposta do cadastro também denuncia). Tratar o
-    429 da Auth como resposta normal (o limite próprio por e-mail já protege) e igualar o tempo.
+  - Resolvido em 25/10/2026. Já existia: o limite de e-mails da Auth (60 s entre envios) só vale
+    para e-mail com conta, e o 429 chegava à tela em `/recuperar`, `/reenviar` e no cadastro.
+    Pedindo duas vezes seguidas, dava para saber se um e-mail tem conta (o tempo de resposta também
+    denunciava). Agora o 429 da Auth vira resposta normal e vai para o log, `/recuperar` e
+    `/reenviar` respondem sem esperar a Auth, e o cadastro espera no mínimo 3 s por ela e grava o
+    cookie de cadastro em andamento sempre (com um id inventado quando a Auth não devolve a conta).
+    O limite do `GET /api/conta/cadastro` conta por cookie, e não pelo id da conta (o contador
+    mostrava quando dois cadastros do mesmo e-mail tinham o mesmo id). O limite por IP da Auth
+    (`over_request_rate_limit`) continua aparecendo como "Muitas tentativas": vem antes de ela olhar
+    a conta. Ficou de propósito: `EMAIL_FAILED` quando o SMTP recusa o envio, que só acontece com o
+    SMTP quebrado para todo mundo.
+- Revisão de segurança da enumeração de contas (25/10/2026), deixado para depois:
+  - Login: a Auth só roda o bcrypt quando acha o e-mail, então o `LOGIN_FAILED` de e-mail sem conta
+    deve voltar mais rápido (não medido). Dar um tempo mínimo ao `LOGIN_FAILED` com o `atLeast`.
+  - O limite de e-mails do projeto na Auth responde com o mesmo 429 do intervalo de 60 s e agora
+    fica só no log: esgotado, o cadastro mostra "Confira seu e-mail" e nada chega. Dá para esgotar
+    de propósito pelo `/reenviar` (sem Turnstile), e o mesmo vale para o limite diário do Gmail
+    (cerca de 500), que leva ao `EMAIL_FAILED`. Subir o limite de e-mails do Supabase até o do
+    Gmail, pôr Turnstile em `/recuperar` e `/reenviar` e criar um alerta para essas linhas do log.
   - Telas de conta: o `<label>` envolve o campo de senha, o botão "Mostrar" e a dica, e o leitor de
     tela lê tudo como nome do campo. Separar o rótulo com `for`/`id`.
   - "Usar outro e-mail" depois de recarregar a página volta com Steam, WhatsApp e endereço vazios.

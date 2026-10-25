@@ -15,8 +15,10 @@ export default defineEventHandler(async (event) => {
 
   const pending = pendingSignup(event)
   if (!pending) return { email: null, confirmed: false }
-  // Um cookie só não serve para consultar a Auth sem parar, trocando de IP.
-  rateLimitKey(event, 'cadastro-andamento-conta', pending.id, 240, 15 * 60)
+  // Um cookie só não serve para consultar a Auth sem parar, trocando de IP. Conta por cookie, não
+  // por conta: pelo contador, daria para ver que dois cadastros do mesmo e-mail guardam o mesmo id
+  // (sem conta confirmada, a Auth devolve o id de verdade; com conta, inventa um a cada vez).
+  rateLimitKey(event, 'cadastro-andamento-conta', pending.ref, 240, 15 * 60)
 
   let user = null
   try {
