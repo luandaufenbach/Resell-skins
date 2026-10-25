@@ -55,6 +55,10 @@ useSeoMeta({ title: 'Confirmar e-mail | Revenda', robots: 'noindex' })
           {{ pending ? 'Confirmando…' : 'Confirmar e-mail' }}
         </button>
       </form>
+      <p class="other-device">
+        Começou o cadastro em outro aparelho? Depois de confirmar, a tela de lá se atualiza sozinha e pede esta
+        senha.
+      </p>
     </template>
 
     <template v-else>
@@ -67,3 +71,9 @@ useSeoMeta({ title: 'Confirmar e-mail | Revenda', robots: 'noindex' })
     </template>
   </AccountPage>
 </template>
+
+<style scoped>
+.other-device {
+  color: var(--muted);
+}
+</style>

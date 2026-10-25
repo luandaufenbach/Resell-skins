@@ -1,6 +1,7 @@
 // Sessão do revendedor. Login, cadastro e senha passam pelo nosso servidor, que guarda os tokens
 // do Supabase em cookies httpOnly: o navegador nunca vê token nem chave. O token de acesso vale
 // 1 hora; quando vence, o de renovação (que vale uma vez só) troca por um par novo.
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
 
 const ACCESS = 'vitrine_acesso'
 const REFRESH = 'vitrine_sessao'
@@ -8,6 +9,12 @@ const REFRESH = 'vitrine_sessao'
 // "Painel" e /entrar e /cadastro levam direto ao painel. Quem confere a sessão é o servidor.
 const MARKER = 'vitrine_conta'
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 30
+// Cadastro em andamento: id e e-mail da conta nova, cifrados, no navegador que fez o cadastro. A
+// tela "Confira seu e-mail" descobre por ele quando o e-mail foi confirmado (no celular, por
+// exemplo) e então pede a senha criada lá. Ninguém entra sozinho: quem começasse um cadastro com o
+// e-mail de outra pessoa ganharia a conta quando ela confirmasse.
+const SIGNUP = 'vitrine_cadastro'
+const SIGNUP_MAX_AGE = 60 * 60 * 24
 
 function cookieOptions(event, maxAge) {
   return {
@@ -24,7 +31,48 @@ export function setSession(event, session) {
   setCookie(event, ACCESS, session.access_token, cookieOptions(event, session.expires_in || 3600))
   setCookie(event, REFRESH, session.refresh_token, cookieOptions(event, REFRESH_MAX_AGE))
   setCookie(event, MARKER, '1', { ...cookieOptions(event, REFRESH_MAX_AGE), httpOnly: false })
+  // Com a conta aberta, o cadastro em andamento acabou.
+  if (getCookie(event, SIGNUP)) clearPendingSignup(event)
   event.context.session = { user: session.user, token: session.access_token }
+}
+
+/** Lembra, neste navegador, a conta que acabou de ser cadastrada, por `maxAge` segundos. */
+export function setPendingSignup(event, { id, email }, maxAge = SIGNUP_MAX_AGE) {
+  const iv = randomBytes(12)
+  const cipher = createCipheriv('aes-256-gcm', signupKey(), iv, { authTagLength: 16 })
+  const text = JSON.stringify({ id, email, ate: Date.now() + maxAge * 1000 })
+  const data = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()])
+  setCookie(event, SIGNUP, Buffer.concat([iv, cipher.getAuthTag(), data]).toString('base64url'), cookieOptions(event, maxAge))
+}
+
+/** { id, email, ate } do cadastro em andamento neste navegador; null sem cookie, vencido ou adulterado. */
+export function pendingSignup(event) {
+  const raw = Buffer.from(String(getCookie(event, SIGNUP) ?? ''), 'base64url')
+  if (raw.length <= 28) return null
+  try {
+    const decipher = createDecipheriv('aes-256-gcm', signupKey(), raw.subarray(0, 12), { authTagLength: 16 })
+    decipher.setAuthTag(raw.subarray(12, 28))
+    const text = Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString('utf8')
+    const { id, email, ate } = JSON.parse(text)
+    const valid = ate > Date.now() && /^[0-9a-f-]{36}$/i.test(id) && typeof email === 'string'
+    return valid ? { id, email, ate } : null
+  } catch {
+    return null
+  }
+}
+
+export function clearPendingSignup(event) {
+  deleteCookie(event, SIGNUP, cookieOptions(event))
+}
+
+// Cifrado (AES-GCM, que também impede alterar), e não só assinado: o id da conta não pode ser
+// lido. Quando o e-mail já tem conta confirmada, a Auth devolve um id inventado, diferente a cada
+// cadastro; comparando dois cadastros, daria para saber se o e-mail tem conta. A chave sai da chave
+// secreta do Supabase, que só o servidor tem.
+function signupKey() {
+  const { supabaseSecretKey } = useRuntimeConfig()
+  if (!supabaseSecretKey) throw new Error('NUXT_SUPABASE_SECRET_KEY ausente')
+  return createHash('sha256').update(`cadastro:${supabaseSecretKey}`).digest()
 }
 
 export function endSession(event) {

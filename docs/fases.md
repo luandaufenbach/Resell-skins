@@ -183,6 +183,10 @@ Decisões (o dono mandou seguir com a recomendação em 19/10/2026):
       `@vitrine.test` criadas pela API de admin. Em 24/10/2026 o e-mail chegou pelo Gmail; falta um
       cadastro de verdade do começo ao fim (modelos em `supabase/emails/`, Site URL no Supabase).
 - [x] Limite de tentativas no login (10 por IP e 5 por e-mail a cada 15 minutos).
+- [x] Confirmação em outro aparelho (25/10/2026, achado no teste do dono): a tela "Confira seu
+      e-mail" ficava parada no computador depois de confirmar no celular, e o F5 voltava ao formulário.
+      Agora ela pergunta ao servidor a cada 5 segundos, sobrevive ao F5 (cookie de 24h) e, confirmado,
+      pede a senha criada no celular para continuar no computador.
 - [x] Turnstile também na geração de prévia (`POST /api/previa`), como pede o CLAUDE.md.
 - [x] Na Render: preencher `NUXT_PUBLIC_SITE_URL` com o endereço do site e testar o limite com um
       `true-client-ip` falsificado (o `render.yaml` já usa esse cabeçalho, que a Cloudflare na
@@ -436,3 +440,11 @@ Ideias que surgirem durante as fases e ficaram fora do escopo.
     uma sessão roubada continua valendo até 30 dias.
   - Eventos (visitas e cliques) de uma loja recém-bloqueada ainda contam por até 5 minutos (cache da
     loja em `eventos.post.js`). A loja pública sai do ar na hora.
+- Cadastro confirmado em outro aparelho (25/10/2026), deixado para depois:
+  - Já existia: o limite de e-mails da Auth (60 s entre envios) só vale para e-mail com conta, e o
+    429 chega à tela em `/recuperar`, `/reenviar` e no cadastro. Pedindo duas vezes seguidas, dá
+    para saber se um e-mail tem conta (o tempo de resposta do cadastro também denuncia). Tratar o
+    429 da Auth como resposta normal (o limite próprio por e-mail já protege) e igualar o tempo.
+  - Telas de conta: o `<label>` envolve o campo de senha, o botão "Mostrar" e a dica, e o leitor de
+    tela lê tudo como nome do campo. Separar o rótulo com `for`/`id`.
+  - "Usar outro e-mail" depois de recarregar a página volta com Steam, WhatsApp e endereço vazios.

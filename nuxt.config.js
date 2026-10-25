@@ -59,7 +59,8 @@ export default defineNuxtConfig({
   routeRules: {
     '/previa/*': { headers: { 'X-Robots-Tag': 'noindex' } },
     '/api/**': { headers: { 'X-Robots-Tag': 'noindex' } },
-    '/cadastro': { headers: { 'X-Robots-Tag': 'noindex' } },
+    // A página pode trazer o e-mail do cadastro em andamento: nada de cache.
+    '/cadastro': { headers: { 'X-Robots-Tag': 'noindex', 'Cache-Control': 'no-store' } },
     '/entrar': { headers: { 'X-Robots-Tag': 'noindex' } },
     '/esqueci-senha': { headers: { 'X-Robots-Tag': 'noindex' } },
     '/nova-senha': { headers: { 'X-Robots-Tag': 'noindex' } },

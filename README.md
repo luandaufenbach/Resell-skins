@@ -48,6 +48,7 @@ app/
   components/AdminStoreDetail.vue  detalhe da loja: pagamento, verificar, bloqueio, observação
   components/AdminPayments.vue pagamentos do mês com o total
   components/AccountPage.vue moldura das telas de conta (formulário e, no computador, a vitrine)
+  components/SignupPending.vue  "Confira seu e-mail": vira "E-mail confirmado" quando a pessoa confirma em outro aparelho
   components/StoreWindow.vue vitrine de exemplo ao lado dos formulários, com o endereço da loja
   components/StoreFields.vue Steam, WhatsApp e endereço (cadastro e criação da loja no painel)
   components/PanelStatus.vue aba Loja: verificação, situação, inventário e conta
@@ -153,6 +154,13 @@ antes com o e-mail de outra pessoa ficaria com a conta.
 - `POST /api/conta/cadastro` `{ steam, whatsapp, slug, email, turnstile }`: confere o endereço e o
   inventário (público e sem loja verificada) e cria a conta com uma senha provisória que ninguém
   conhece. `POST /api/conta/confirmar { token_hash, senha }` confirma o e-mail e grava a senha.
+- `GET /api/conta/cadastro`: cadastro em andamento neste navegador, `{ email, confirmed }`. O
+  cadastro grava o cookie `vitrine_cadastro` (24h; 1h depois de confirmado) com o id e o e-mail da
+  conta, cifrados com uma chave tirada da chave secreta do Supabase (o id não pode ser lido: o da
+  Auth para e-mail que já tem conta muda a cada cadastro); a tela "Confira seu e-mail" pergunta a cada 5 segundos e, quando o e-mail foi
+  confirmado em outro aparelho, pede a senha criada lá. Não entra sozinha: quem começasse um
+  cadastro com o e-mail de outra pessoa ganharia a conta quando ela confirmasse. Só responde sobre a
+  conta deste navegador. `DELETE` esquece o cadastro ("Usar outro e-mail"); abrir a sessão também.
 - `POST /api/conta/entrar`, `/sair`, `/recuperar`, `/nova-senha`, `/reenviar`. Cadastro,
   recuperação e reenvio respondem igual com ou sem conta para o e-mail. Login: 10 tentativas por IP
   e 5 falhas por e-mail a cada 15 minutos (a senha certa não gasta tentativa).

@@ -8,11 +8,16 @@ const { data: config } = await usePublicConfig()
 // Quem já entrou vai direto para o painel.
 if (useCookie('vitrine_conta').value) await navigateTo('/painel', { replace: true })
 
+// Cadastro em andamento neste navegador: volta direto para "Confira seu e-mail", mesmo depois de
+// recarregar a página.
+const { data: waiting } = await useFetch('/api/conta/cadastro', { key: 'cadastro-andamento' })
+
 const form = reactive({ steam: '', whatsapp: '', slug: '', email: '' })
 const token = ref('')
 const turnstile = ref(null)
 const pending = ref(false)
-const sentTo = ref('')
+const sentTo = ref(waiting.value?.email ?? '')
+const confirmed = ref(Boolean(waiting.value?.confirmed))
 const { problem, formEl, fail } = useFormProblem()
 
 const previewId = String(route.query.previa ?? '')
@@ -27,6 +32,13 @@ if (/^[A-Za-z0-9]{10}$/.test(previewId)) {
 
 const monthly = computed(() => config.value?.plans?.monthly)
 
+// "Usar outro e-mail": de volta ao formulário, direto no campo do e-mail.
+async function restart() {
+  sentTo.value = ''
+  await nextTick()
+  formEl.value?.querySelector('input[type="email"]')?.focus()
+}
+
 async function submit() {
   problem.value = null
   const whatsapp = normalizePhone(form.whatsapp)
@@ -39,6 +51,7 @@ async function submit() {
       method: 'POST',
       body: { ...form, whatsapp, turnstile: token.value },
     })
+    confirmed.value = false
     sentTo.value = form.email.trim()
   } catch (error) {
     fail(error)
@@ -56,13 +69,7 @@ useSeoMeta({
 </script>
 
 <template>
-  <AccountPage v-if="sentTo" title="Confira seu e-mail">
-    <p class="lead">
-      Mandamos um link para <strong>{{ sentTo }}</strong>. Abra o link para confirmar o e-mail e criar a senha
-      da sua conta.
-    </p>
-    <ResendConfirmation :email="sentTo" />
-  </AccountPage>
+  <SignupPending v-if="sentTo" :email="sentTo" :confirmed="confirmed" @restart="restart" />
 
   <AccountPage v-else title="Criar minha loja" :slug="form.slug">
     <p class="lead">Sua loja fica pronta em poucos minutos, com as skins do seu inventário.</p>
