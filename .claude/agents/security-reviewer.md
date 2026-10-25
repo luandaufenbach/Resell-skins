@@ -47,14 +47,14 @@ não edita arquivos, não roda comandos que mudem o projeto ou o banco, não faz
   servidor e falha fechada. Middleware só do cliente (`app/middleware`) não conta.
 - Lista de e-mails vem de variável de ambiente fora de `runtimeConfig.public`/`NUXT_PUBLIC_*`;
   comparação normalizada (minúsculas, sem espaços) e só com e-mail verificado.
-- Ações de admin (registrar pagamento, bloquear, fundador, verificar) usam a chave service role só
+- Ações de admin (registrar pagamento, bloquear, verificar) usam a chave service role só
   no servidor, depois da checagem, e validam a entrada (período 1 ou 3, valor numérico positivo).
 
 **RLS do Supabase**
 - Toda tabela com `enable row level security` e política para cada operação usada. Nada de
   `using (true)` em escrita; `with check` em insert e update.
 - Política de update libera a linha inteira: colunas que o revendedor não pode mudar (`pago_ate`,
-  plano e valor, fundador, verificada, bloqueio, SteamID depois de verificado) precisam de trigger,
+  plano e valor, verificada, bloqueio, SteamID depois de verificado) precisam de trigger,
   privilégio por coluna ou tabela separada.
 - Leitura pública só de lojas verificadas e não bloqueadas, e só de colunas públicas. Custo do item,
   e-mail, observações do admin e pagamentos nunca chegam ao visitante. Desconfie de `select('*')`

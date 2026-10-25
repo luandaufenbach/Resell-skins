@@ -1,14 +1,12 @@
 <script setup>
 // Detalhe de uma loja no admin: dados, cobrança no WhatsApp, registrar pagamento, verificar,
-// fundador, bloqueio, observação e os pagamentos dela. Folha de baixo no celular, painel na
+// bloqueio, observação e os pagamentos dela. Folha de baixo no celular, painel na
 // lateral no computador. Registrar pagamento e bloquear pedem confirmação: não há como desfazer
 // pelo site.
 const props = defineProps({
   store: { type: Object, default: null },
   config: { type: Object, default: null },
   host: { type: String, required: true },
-  // Lojas marcadas como fundadoras agora, para mostrar as vagas usadas.
-  foundersUsed: { type: Number, default: 0 },
 })
 const emit = defineEmits(['close', 'update', 'paid'])
 
@@ -129,34 +127,7 @@ async function registerPayment() {
   loadHistory(store.id)
 }
 
-// ---- Fundador, verificação, bloqueio e observação
-const founderValue = computed(() =>
-  props.store ? planValue(props.store.plan.id, !props.store.founder, props.config) : null,
-)
-const seats = computed(() => props.config?.founders?.seats ?? null)
-const founderText = computed(() => {
-  const store = props.store
-  if (!store) return ''
-  const parts = [
-    store.founder
-      ? 'Esta loja é fundadora.'
-      : 'Desconto para os primeiros assinantes, enquanto mantiverem a assinatura.',
-  ]
-  if (founderValue.value) {
-    const plan = PLAN_LABEL[store.plan.id]?.toLowerCase() ?? store.plan.id
-    parts.push(
-      `${store.founder ? 'Tirando, o valor volta para' : 'Marcando, o valor passa para'} ${formatPlanPrice(founderValue.value)} no plano ${plan}.`,
-    )
-  }
-  if (seats.value) parts.push(`Vagas usadas: ${props.foundersUsed} de ${seats.value}.`)
-  return parts.join(' ')
-})
-
-async function toggleFounder() {
-  const store = await act('fundador', 'fundador', { fundador: !props.store.founder })
-  if (store) emit('update', store)
-}
-
+// ---- Verificação, bloqueio e observação
 async function verify() {
   // Vai junto o SteamID da tela: o servidor só verifica se a loja ainda tem esse inventário.
   const store = await act('verificar', 'verificar', { steamid: props.store.steamid })
@@ -246,7 +217,6 @@ const profileUrl = computed(() => `https://steamcommunity.com/profiles/${props.s
           <dt>Plano</dt>
           <dd>
             {{ PLAN_LABEL[store.plan.id] }}, {{ store.plan.value ? formatPlanPrice(store.plan.value) : 'sem valor' }}
-            <template v-if="store.founder"> (fundador)</template>
           </dd>
         </div>
         <div>
@@ -359,16 +329,6 @@ const profileUrl = computed(() => `https://steamcommunity.com/profiles/${props.s
           <FormProblem v-if="problemFor('pagamento')" :problem="problemFor('pagamento')" />
         </template>
         <p v-else class="muted small">Verifique a loja antes: loja não verificada não fica no ar, mesmo paga.</p>
-      </section>
-
-      <!-- Fundador -->
-      <section class="group" aria-labelledby="admin-fundador">
-        <h3 id="admin-fundador" class="group-title">Preço de fundador</h3>
-        <p class="muted small">{{ founderText }}</p>
-        <button class="btn" type="button" :disabled="busy === 'fundador'" @click="toggleFounder">
-          {{ busy === 'fundador' ? 'Salvando…' : store.founder ? 'Tirar o preço de fundador' : 'Marcar como fundador' }}
-        </button>
-        <FormProblem v-if="problemFor('fundador')" :problem="problemFor('fundador')" />
       </section>
 
       <!-- Bloqueio -->

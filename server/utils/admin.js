@@ -116,7 +116,6 @@ function adminStore(row) {
     // pago_ate igual à hora da verificação).
     trialUsed: verified && !paid && ends <= Date.parse(row.verificada_em),
     plan: { id: row.plano, value: row.valor == null ? null : Number(row.valor) },
-    founder: row.fundador,
     readAt: row.inventario_em,
     createdAt: row.criada_em,
     items: Number(row.itens),
@@ -136,22 +135,17 @@ export function storeName(row) {
   return (row?.nome_loja ?? row?.nome)?.replace(/[\p{Cc}\p{Cf}]/gu, '') || null
 }
 
-/** Planos, vagas de fundador, chave Pix e WhatsApp do dono, para a tela e a mensagem de cobrança. */
+/** Planos, chave Pix e WhatsApp do dono, para a tela e a mensagem de cobrança. */
 export async function adminConfig() {
   let config
   try {
-    config = await readConfig(['planos', 'fundadores', 'pix_dono', 'whatsapp_dono'])
+    config = await readConfig(['planos', 'pix_dono', 'whatsapp_dono'])
   } catch (error) {
     throw unavailable('admin', error)
   }
   const money = (value) => (Number(value) > 0 ? Number(value) : null)
-  const discount = Number(config.fundadores?.desconto)
   return {
     plans: { mensal: money(config.planos?.mensal), trimestral: money(config.planos?.trimestral) },
-    founders: {
-      seats: Number(config.fundadores?.vagas) || null,
-      discount: discount > 0 && discount < 1 ? discount : null,
-    },
     pix: typeof config.pix_dono === 'string' && config.pix_dono.trim() ? config.pix_dono.trim() : null,
     ownerWhatsapp: /^\d{12,15}$/.test(config.whatsapp_dono) ? config.whatsapp_dono : null,
   }
@@ -162,9 +156,6 @@ export function adminDbError(error) {
   const { code } = supabaseError(error)
   const hint = error?.data?.hint
   if (code === 'P0001' && hint === 'NOT_VERIFIED') throw invalid('NOT_VERIFIED')
-  if (code === 'P0001' && hint === 'FOUNDERS_FULL') {
-    throw createError({ statusCode: 409, statusMessage: 'Vagas esgotadas', data: { code: 'FOUNDERS_FULL' } })
-  }
   if (code === 'P0002') {
     throw createError({ statusCode: 404, statusMessage: 'Loja não encontrada', data: { code: 'STORE_NOT_FOUND' } })
   }

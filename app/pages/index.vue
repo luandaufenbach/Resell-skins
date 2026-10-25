@@ -16,11 +16,9 @@ const askLink = computed(() =>
 
 // ---- Preço
 const plans = computed(() => config.value?.plans ?? {})
-const founders = computed(() => config.value?.founders ?? {})
 const hasPlans = computed(() => plans.value.monthly && plans.value.quarterly)
 
 const money = formatPlanPrice
-const founderPrice = (value) => money(value * (1 - founders.value.discount))
 
 // ---- O que a loja mostra: duas skins da demo, uma com stickers e outra com trava de troca.
 const SPECIMENS = ['StatTrak™ AK-47 | Redline (Field-Tested)', '★ Flip Knife | Tiger Tooth (Factory New)']
@@ -205,12 +203,6 @@ useSeoMeta({
           </dl>
           <p v-else class="pricing-lead">Peça os valores pelo WhatsApp.</p>
 
-          <p v-if="hasPlans && founders.seats && founders.discount" class="founders">
-            <strong>Os {{ founders.seats }} primeiros assinantes viram fundadores</strong> e pagam
-            {{ founderPrice(plans.monthly) }} por mês, ou {{ founderPrice(plans.quarterly) }} no trimestral,
-            enquanto mantiverem a assinatura.
-          </p>
-
           <div class="pricing-actions">
             <NuxtLink to="/cadastro" class="btn btn--primary btn--large">Criar minha loja</NuxtLink>
             <NuxtLink to="/previa" class="btn btn--large">Ver como fica minha loja</NuxtLink>
@@ -257,8 +249,7 @@ useSeoMeta({
           <details>
             <summary>Posso cancelar?</summary>
             <p>
-              Pode, quando quiser. Não tem fidelidade nem multa: é só não renovar. Quem tem preço de fundador e
-              cancela paga o valor cheio se voltar depois.
+              Pode, quando quiser. Não tem fidelidade nem multa: é só não renovar.
             </p>
           </details>
           <details>
@@ -606,15 +597,6 @@ useSeoMeta({
 .plan-per {
   color: var(--muted);
   font-size: var(--step--1);
-}
-
-.founders {
-  color: var(--muted);
-}
-
-.founders strong {
-  color: var(--text);
-  font-weight: 640;
 }
 
 .pricing-actions {

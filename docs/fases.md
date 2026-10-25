@@ -3,6 +3,8 @@
 Uma fase por sessão. Começar com um plano curto e esperar aprovação antes de escrever código.
 As decisões de produto, preço e design estão no [CLAUDE.md](../CLAUDE.md).
 Até 22/10/2026 o produto se chamava Vitrine; o registro das fases abaixo mantém o nome antigo.
+Em 24/10/2026 saiu o preço de fundador: todos pagam o valor do plano. Onde o registro abaixo cita o
+fundador, vale só como histórico.
 
 Toda fase só está pronta quando, além do critério dela:
 
@@ -424,8 +426,6 @@ Ideias que surgirem durante as fases e ficaram fora do escopo.
 - Admin (fase 6), deixado para depois:
   - Desfazer um pagamento lançado errado (volta o vencimento e sai do total do mês). Por enquanto,
     corrigir no Table Editor do Supabase: apagar a linha em `pagamentos` e acertar `lojas.pago_ate`.
-  - Fundador que cancela e volta paga o valor cheio: hoje o admin desmarca à mão. Tirar sozinho
-    quando a loja ficar vencida por muito tempo.
   - Avisar o admin quando o revendedor troca o WhatsApp ou o endereço da loja (pendente da fase 5).
   - A lista do admin traz todas as lojas de uma vez (até 1000, o teto da API do Supabase).
     Paginar quando passar de algumas centenas.

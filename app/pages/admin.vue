@@ -36,7 +36,6 @@ watchEffect(() => {
   if (payments.value?.month === thisMonth) thisMonthTotal.value = payments.value.total
 })
 const openCount = computed(() => stores.value.filter((s) => s.open).length)
-const foundersUsed = computed(() => stores.value.filter((s) => s.founder).length)
 
 // ---- Loja aberta no detalhe
 const selectedId = ref(null)
@@ -109,7 +108,6 @@ useSeoMeta({ title: 'Admin | Revenda', robots: 'noindex' })
       :store="selected"
       :config="config"
       :host="host"
-      :founders-used="foundersUsed"
       @close="selectedId = null"
       @update="updateStore"
       @paid="onPaid"

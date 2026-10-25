@@ -45,7 +45,7 @@ app/
   pages/painel.vue           painel do revendedor, em abas (?aba=marca, itens, precos)
   pages/admin.vue            administração, em abas (Lojas e ?aba=pagamentos)
   components/AdminStores.vue lista de lojas do admin: dias até o vencimento, filtros, busca e "Cobrar"
-  components/AdminStoreDetail.vue  detalhe da loja: pagamento, verificar, fundador, bloqueio, observação
+  components/AdminStoreDetail.vue  detalhe da loja: pagamento, verificar, bloqueio, observação
   components/AdminPayments.vue pagamentos do mês com o total
   components/AccountPage.vue moldura das telas de conta (formulário e, no computador, a vitrine)
   components/StoreWindow.vue vitrine de exemplo ao lado dos formulários, com o endereço da loja
@@ -80,7 +80,7 @@ server/
   api/previa.post.js               cria a prévia (link da Steam + WhatsApp + Turnstile)
   api/previa/[id].get.js           loja da prévia (cópia do inventário), com cache de 10 min
   api/demo.get.js                  loja de exemplo
-  api/configuracao.get.js          planos, preço de fundador e WhatsApp do dono
+  api/configuracao.get.js          planos e WhatsApp do dono
   api/conta/*                      cadastro, entrar, sair, confirmar e-mail, senha nova
   api/painel.get.js, api/painel/*  painel: loja, código de posse, verificar, atualizar, marca,
                                    imagem, endereço, preços e itens
@@ -124,7 +124,7 @@ cria recebe o cookie `previa_<id>`.
 O `whatsapp` só vem para o navegador com o cookie da prévia (`owner: true`): assim ninguém usa uma
 prévia com o inventário de outra pessoa e o próprio WhatsApp como se fosse uma loja.
 `GET /api/demo` responde a loja de exemplo no mesmo formato, sem `whatsapp` e `expiresAt`.
-`GET /api/configuracao` responde os planos, o preço de fundador e o WhatsApp do dono.
+`GET /api/configuracao` responde os planos e o WhatsApp do dono.
 
 Erros vêm com `data.code`: `PRIVATE`, `RATE_LIMIT` (a Steam limitou), `NOT_FOUND`, `INVALID_INPUT`,
 `STEAM_DOWN`, `INVALID_PHONE`, `EXPIRED` (410), `PREVIEW_NOT_FOUND`, `UNAVAILABLE` (banco fora) ou
@@ -212,21 +212,19 @@ Ponha na lista só e-mails que já têm conta confirmada no site, e mantenha no 
 nenhum outro jeito de entrar (Google, link mágico, telefone): o admin vale pelo e-mail confirmado.
 
 - `GET /api/admin/lojas`: todas as lojas (`public.admin_lojas`) com situação (`pendente`,
-  `bloqueada`, `vencida`, `teste` ou `paga`), vencimento, plano e valor, fundador, verificação,
+  `bloqueada`, `vencida`, `teste` ou `paga`), vencimento, plano e valor, verificação,
   última leitura do inventário, itens, visitas e cliques no WhatsApp em 30 dias, pagamentos e a
-  observação; mais `config` com os planos, as vagas de fundador, a chave Pix e o WhatsApp do dono.
+  observação; mais `config` com os planos, a chave Pix e o WhatsApp do dono.
   Teste é a loja no ar sem nenhum pagamento registrado.
 - `GET /api/admin/pagamentos?mes=AAAA-MM` (padrão: o mês atual, no horário de Brasília) ou
   `?loja=<id>`: pagamentos do mais novo ao mais antigo e `total`, a soma das mesmas linhas.
 - `POST /api/admin/lojas/<id>/pagamento { meses, valor, observacao? }`: `meses` 1 ou 3, valor
   recebido em reais. `public.registrar_pagamento` soma o período a partir do vencimento ou de hoje,
   o que for maior, tira o bloqueio, põe a loja no plano do período (1 mês = mensal, 3 = trimestral;
-  na troca, o valor passa a ser o do plano na configuração, com o desconto de fundador) e guarda o
+  na troca, o valor passa a ser o do plano na configuração) e guarda o
   e-mail de quem registrou. Loja não verificada: 400 `NOT_VERIFIED`. Não há como desfazer pelo site.
 - `POST .../bloqueio { bloqueada }`: tira a loja do ar na hora, mesmo paga ("loja indisponível"); o
   painel do revendedor diz que a loja foi suspensa, sem a chave Pix.
-- `POST .../fundador { fundador }`: o valor da loja vira o do plano com ou sem o desconto de
-  fundador; 409 `FOUNDERS_FULL` quando as vagas da configuração acabaram.
 - `POST .../verificar { steamid }`: verificação manual da posse (`public.verificar_loja_id`), que
   começa o teste de 7 dias, a menos que o SteamID, o e-mail ou o WhatsApp já tenham usado um. Vai
   junto o SteamID que o admin viu: se a loja agora tem outro, 409 `STORE_CHANGED`. Continua valendo
@@ -247,9 +245,9 @@ Copie `.env.example` para `.env` e preencha as chaves do Supabase e da SteamApis
 (cada variável está explicada lá). Depois, `npm run migrar` cria as tabelas e
 `npm run precos` carrega os preços pela primeira vez.
 
-Planos, preço de fundador, o WhatsApp do dono (contato da página inicial e do painel) e a chave Pix
+Planos, o WhatsApp do dono (contato da página inicial e do painel) e a chave Pix
 do dono (aviso de vencimento no painel) ficam na tabela `configuracao` do Supabase (chaves
-`planos`, `fundadores`, `whatsapp_dono` e `pix_dono`). Para mudar, edite a linha no Table
+`planos`, `whatsapp_dono` e `pix_dono`). Para mudar, edite a linha no Table
 Editor; o site lê de novo em até 5 minutos. Cada loja guarda o próprio plano e valor (`lojas.plano`
 e `lojas.valor`); a loja nova começa no mensal com o valor da configuração.
 

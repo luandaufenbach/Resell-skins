@@ -79,8 +79,8 @@ Nomes reservados para slug: todas as rotas acima, mais `api`, `loja`, `ajuda`, `
 - Pagamento por fora (Pix), sem gateway. O admin registra cada pagamento à mão.
 - Fluxo: página inicial → prévia de 24h sem conta → cadastro → 7 dias grátis → Pix → admin
   registra o pagamento.
-- Planos: mensal R$ 49 e trimestral R$ 129. Fundadores (os 20 primeiros assinantes) têm 20% de
-  desconto enquanto mantiverem a assinatura; se cancelarem e voltarem, pagam o valor cheio.
+- Planos: mensal R$ 49 e trimestral R$ 129, o mesmo valor para todos. Não há preço de fundador
+  (retirado em 24/10/2026).
 - Os valores dos planos ficam em configuração, não no código, e cada loja guarda o próprio valor.
 - Cada loja tem `pago_ate`. Ao registrar um pagamento, o admin escolhe o período (1 ou 3 meses) e
   informa o valor recebido. O período é somado a partir do vencimento ou de hoje, o que for maior.

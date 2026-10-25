@@ -43,14 +43,6 @@ export function dueText(store) {
   return `${STATUS_LABEL[store.status]} até ${when}`
 }
 
-/** Valor do plano para a loja, pela configuração (com o desconto de fundador). Igual ao banco. */
-export function planValue(plan, founder, config) {
-  const base = config?.plans?.[plan]
-  if (!base) return null
-  const discount = founder ? (config.founders?.discount ?? 0) : 0
-  return Math.round(base * (1 - discount) * 100) / 100
-}
-
 /**
  * Valor esperado de um pagamento de `months` meses: o valor da loja quando o período é o do plano
  * dela; senão, o do plano do período na configuração (é o que o banco grava na troca de plano).
@@ -58,7 +50,7 @@ export function planValue(plan, founder, config) {
 export function expectedValue(store, months, config) {
   const plan = months === 3 ? 'trimestral' : 'mensal'
   if (plan === store.plan.id && store.plan.value) return store.plan.value
-  return planValue(plan, store.founder, config)
+  return config?.plans?.[plan] ?? null
 }
 
 /** Novo vencimento depois de um pagamento: a partir do vencimento ou de hoje, o que for maior. */
@@ -132,7 +124,6 @@ export function chargeLink(store, config, host) {
 const MESSAGES = {
   PAYMENT_VALUE: { field: 'valor', title: 'Confira o valor', body: 'Use o valor recebido em reais, maior que zero, como 49,00.' },
   NOTE_TOO_LONG: { title: 'Texto longo demais', body: 'A observação da loja vai até 1000 caracteres, e a do pagamento até 300.' },
-  FOUNDERS_FULL: { title: 'As vagas de fundador acabaram', body: 'Tire o preço de fundador de outra loja ou aumente as vagas na configuração.' },
   NOT_VERIFIED: { title: 'Verifique a loja antes', body: 'Loja não verificada não fica no ar, mesmo paga. Verifique e registre de novo.' },
   STEAM_TAKEN: { title: 'Este inventário já tem uma loja verificada', body: 'Cada SteamID abre uma loja só. Confira a outra loja antes.' },
   STORE_NOT_FOUND: { title: 'Esta loja não existe mais', body: 'Ela pode ter sido apagada. Recarregue a lista.' },

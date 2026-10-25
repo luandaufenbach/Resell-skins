@@ -17,7 +17,6 @@ const FILTERS = [
   { id: 'vencida', label: 'Vencidas', test: (s) => s.status === 'vencida' },
   { id: 'pendente', label: 'Não verificadas', test: (s) => s.status === 'pendente' },
   { id: 'bloqueada', label: 'Bloqueadas', test: (s) => s.status === 'bloqueada' },
-  { id: 'fundador', label: 'Fundadores', test: (s) => s.founder },
 ]
 
 const SORTS = [
@@ -31,12 +30,6 @@ const sort = ref('vencimento')
 const search = ref('')
 
 const counts = computed(() => Object.fromEntries(FILTERS.map((f) => [f.id, props.stores.filter(f.test).length])))
-const seats = computed(() => props.config?.founders?.seats ?? null)
-
-function countText(f) {
-  if (f.id === 'fundador' && seats.value) return `${counts.value.fundador} de ${seats.value}`
-  return counts.value[f.id]
-}
 
 // Vencimento: as não verificadas vão para o fim (não têm data); empate pelo nome do endereço.
 const SORTERS = {
@@ -104,7 +97,7 @@ function showAll() {
         @click="filter = f.id"
       >
         {{ f.label }}
-        <span class="chip-count">{{ countText(f) }}</span>
+        <span class="chip-count">{{ counts[f.id] }}</span>
       </button>
     </div>
 
@@ -153,7 +146,6 @@ function showAll() {
           <td class="status">{{ dueText(s) }}</td>
           <td class="plan">
             {{ PLAN_LABEL[s.plan.id] }} <span class="money">{{ s.plan.value ? formatPlanPrice(s.plan.value) : '—' }}</span>
-            <span v-if="s.founder" class="founder">Fundador</span>
           </td>
           <td class="verified">
             <template v-if="s.verified">
@@ -399,17 +391,6 @@ function showAll() {
   font-weight: 600;
 }
 
-.founder {
-  display: inline-block;
-  margin-left: 0.375rem;
-  padding: 0 0.375rem;
-  border: 1px solid var(--accent-edge);
-  border-radius: var(--radius-s);
-  font-size: var(--step--1);
-  font-stretch: var(--semi);
-  font-weight: 600;
-}
-
 .charge {
   min-height: 44px;
   padding-inline: 0.875rem;
@@ -607,11 +588,6 @@ function showAll() {
   .read,
   .verified {
     white-space: nowrap;
-  }
-
-  .plan .founder {
-    display: table;
-    margin: 0.25rem 0 0;
   }
 
   .m-label {
