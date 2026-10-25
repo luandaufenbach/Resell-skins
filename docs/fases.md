@@ -130,6 +130,10 @@ Contas (guia passado ao dono em 19/10/2026; as chaves nunca vão para o chat):
   `onboarding@resend.dev`). Quem manda os e-mails de conta é o Supabase, então ela não vai no `.env`
   nem na Render. Sem domínio verificado, o Resend só entrega para o e-mail da própria conta, o que
   basta para testar. Com o domínio, verificar no Resend e trocar o remetente.
+- E-mail sem domínio (24/10/2026): o SMTP do Supabase passou para o Gmail `revenda.skins@gmail.com`
+  (host `smtp.gmail.com`, porta 465, usuário o e-mail completo, senha de app com verificação em duas
+  etapas; cerca de 500 e-mails por dia). O Supabase avisa que o Gmail pode cair mais no spam. Testado
+  pelo dono: o e-mail chegou. Com o domínio, voltar para o Resend.
 - Chave publishable do Supabase: passa a se chamar `NUXT_SUPABASE_PUBLISHABLE_KEY` (no `.env` e na
   Render, salva com "Save only"), para não ir para o navegador.
 - Supabase, para os links dos e-mails: Authentication > URL Configuration > Site URL
@@ -174,8 +178,8 @@ Decisões (o dono mandou seguir com a recomendação em 19/10/2026):
 4. Intervalo mínimo de 10 minutos entre duas atualizações do inventário.
 
 - [x] Cadastro com verificação de e-mail, recuperação de senha e Turnstile. Testado com contas
-      `@vitrine.test` criadas pela API de admin; falta o dono testar um cadastro de verdade com os
-      e-mails saindo pelo Resend (modelos em `supabase/emails/`, Site URL no Supabase).
+      `@vitrine.test` criadas pela API de admin. Em 24/10/2026 o e-mail chegou pelo Gmail; falta um
+      cadastro de verdade do começo ao fim (modelos em `supabase/emails/`, Site URL no Supabase).
 - [x] Limite de tentativas no login (10 por IP e 5 por e-mail a cada 15 minutos).
 - [x] Turnstile também na geração de prévia (`POST /api/previa`), como pede o CLAUDE.md.
 - [x] Na Render: preencher `NUXT_PUBLIC_SITE_URL` com o endereço do site e testar o limite com um
@@ -183,7 +187,9 @@ Decisões (o dono mandou seguir com a recomendação em 19/10/2026):
       frente da Render troca pelo IP real). O limite conta na memória: manter uma instância só.
 - [x] Gerar uma prévia pelo site publicado: a Steam às vezes bloqueia IPs de datacenter. Em 18/10
       a prévia de um inventário de 625 itens saiu em 2,4 s pela Render.
-- [ ] Domínio próprio (.com.br) comprado e ligado à Render antes do primeiro revendedor.
+- [ ] Domínio próprio (.com.br) comprado e ligado à Render depois do primeiro assinante (decidido em
+      24/10/2026). Com ele: hostname no Turnstile, Site URL do Supabase, `NUXT_PUBLIC_SITE_URL` e
+      remetente do Resend.
 - [x] Cache em memória com teto: driver lru-cache, 64 MB (só em produção; em desenvolvimento o
       Nitro guarda o cache em `.nuxt/cache`). A prévia guarda uma cópia do inventário por 24h.
 - [x] Com o site no ar, colar o link de `/` no WhatsApp e conferir imagem e título (fase 3).

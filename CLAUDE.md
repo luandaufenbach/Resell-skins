@@ -95,7 +95,9 @@ Nomes reservados para slug: todas as rotas acima, mais `api`, `loja`, `ajuda`, `
   e comentários em português, comentários curtos que explicam o porquê.
 - Supabase: Postgres com RLS em todas as tabelas; Auth com e-mail e senha, verificação de e-mail
   e recuperação de senha; Storage para logo e banner.
-- E-mail transacional por SMTP próprio (ex.: Resend). O SMTP padrão do Supabase é só para teste.
+- E-mail transacional por SMTP próprio. O SMTP padrão do Supabase é só para teste. Até o domínio
+  próprio, sai pelo Gmail `revenda.skins@gmail.com` com senha de app (decidido em 24/10/2026: o
+  Resend sem domínio só entrega para o e-mail da própria conta); com o domínio, volta para o Resend.
 - Cloudflare Turnstile no cadastro e na geração de prévia. Limite de tentativas no login.
 - Admin: lista de e-mails em variável de ambiente, checada no servidor em toda página `/admin` e
   rota `/api/admin`.
@@ -103,8 +105,9 @@ Nomes reservados para slug: todas as rotas acima, mais `api`, `loja`, `ajuda`, `
   Supabase (us-east-1). Configuração em `render.yaml`; cada push no main publica sozinho. Plano
   grátis para testar (dorme depois de 15 min sem visita); Starter (US$ 7/mês) a partir do primeiro
   revendedor pagante. O código conta com um servidor único e sempre ligado (limite por IP e cache
-  em memória). Vercel Hobby proíbe uso comercial. Domínio próprio (.com.br) comprado antes do
-  primeiro revendedor, para os links das lojas não mudarem depois.
+  em memória). Vercel Hobby proíbe uso comercial. Domínio próprio (.com.br) comprado depois do
+  primeiro assinante (decidido em 24/10/2026). O endereço `onrender.com` continua valendo junto com
+  o domínio, então os links já divulgados não quebram.
 
 ## Steam
 
